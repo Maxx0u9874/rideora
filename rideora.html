@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Rideora — Skip the lines. Enjoy every ride.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07080f;--bg2:#0c0e1a;--bg3:#111425;--bg4:#161929;
+  --accent:#2dd4bf;--accent2:#818cf8;--accent3:#fb923c;--red:#f87171;
+  --neon:#2dd4bf;--text:#e2e8f0;--muted:#64748b;--border:rgba(255,255,255,0.07);
+  --card:rgba(16,19,34,0.9);--radius:14px;
+  --fh:Syne,sans-serif;--fb:Inter,sans-serif;--fm:'JetBrains Mono',monospace;
+  --avoid:#ef4444;--high:#fb923c;--med:#facc15;--low:#34d399;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(45,212,191,0.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:rgba(45,212,191,0.2);border-radius:3px;}
+
+/* ── TOPBAR ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:1000;height:60px;display:flex;align-items:center;padding:0 1.25rem;background:rgba(7,8,15,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);gap:1rem;}
+.logo{font-family:var(--fh);font-size:1.2rem;font-weight:800;color:var(--text);letter-spacing:-0.5px;white-space:nowrap;}
+.logo span{color:var(--accent);}
+.logo-sub{font-size:0.65rem;color:var(--muted);font-family:var(--fm);letter-spacing:1px;display:none;}
+@media(min-width:640px){.logo-sub{display:block;}}
+.park-selector{position:relative;margin-left:0.5rem;}
+.park-select-btn{display:flex;align-items:center;gap:0.4rem;padding:0.3rem 0.7rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.78rem;color:var(--text);font-family:var(--fb);transition:all 0.2s;}
+.park-select-btn:hover{border-color:var(--accent);}
+.park-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:100;overflow:hidden;display:none;}
+.park-dropdown.open{display:block;}
+.park-opt{padding:0.65rem 1rem;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;gap:0.6rem;transition:background 0.15s;}
+.park-opt:hover{background:rgba(45,212,191,0.06);}
+.park-opt.active{color:var(--accent);}
+.park-opt .badge-new{font-size:0.55rem;background:var(--accent2);color:#fff;padding:1px 5px;border-radius:4px;font-family:var(--fm);}
+.nav-center{display:none;flex:1;justify-content:center;gap:0.1rem;}
+@media(min-width:768px){.nav-center{display:flex;}}
+.nav-link{padding:0.35rem 0.8rem;border-radius:8px;font-size:0.8rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.18s;white-space:nowrap;border:none;background:none;}
+.nav-link:hover,.nav-link.active{color:var(--accent);background:rgba(45,212,191,0.07);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:0.5rem;}
+.lang-switcher{display:flex;gap:0.2rem;}
+.lang-btn{background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.5;transition:opacity 0.2s;padding:2px;color:white;}
+.lang-btn:hover,.lang-btn.active{opacity:1;}
+.btn-sm{padding:0.35rem 0.85rem;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;border:none;font-family:var(--fb);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-primary{background:var(--accent);color:#07080f;font-weight:700;}
+.btn-primary:hover{filter:brightness(1.1);}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;cursor:pointer;color:#fff;flex-shrink:0;}
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:999;background:rgba(7,8,15,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:0.4rem 0 calc(0.4rem + env(safe-area-inset-bottom));}
+@media(min-width:768px){.bottom-nav{display:none;}}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.2rem;padding:0.4rem 0;cursor:pointer;color:var(--muted);transition:color 0.18s;font-size:0.6rem;font-weight:500;}
+.bn-item.active{color:var(--accent);}
+.bn-icon{font-size:1.1rem;line-height:1;}
+
+/* ── PAGES ── */
+.page{display:none;min-height:100vh;padding-top:60px;padding-bottom:70px;position:relative;z-index:1;}
+.page.active{display:block;}
+@media(min-width:768px){.page{padding-bottom:0;}}
+
+/* ── HERO ── */
+.hero{padding:3rem 1.25rem 2rem;text-align:center;max-width:700px;margin:0 auto;}
+.hero-eyebrow{font-family:var(--fm);font-size:0.65rem;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:1rem;opacity:0;animation:fadeUp 0.6s 0.1s forwards;}
+.hero-title{font-family:var(--fh);font-size:clamp(2.2rem,7vw,4rem);font-weight:800;line-height:1.05;letter-spacing:-1px;margin-bottom:1rem;opacity:0;animation:fadeUp 0.6s 0.25s forwards;}
+.hero-title .gr{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:0.95rem;color:var(--muted);line-height:1.7;margin-bottom:2rem;opacity:0;animation:fadeUp 0.6s 0.4s forwards;}
+.hero-ctas{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp 0.6s 0.55s forwards;}
+.btn-hero{padding:0.7rem 1.6rem;border-radius:10px;font-family:var(--fh);font-size:0.8rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.22s;border:none;text-transform:uppercase;}
+.bh-primary{background:var(--accent);color:#07080f;}
+.bh-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(45,212,191,0.3);}
+.bh-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.bh-outline:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── INFO STRIP ── */
+.info-strip{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.strip-cell{padding:1rem 1.25rem;border-right:1px solid var(--border);display:flex;align-items:center;gap:0.75rem;}
+.strip-cell:last-child{border-right:none;}
+.strip-icon{font-size:1.5rem;flex-shrink:0;}
+.strip-label{font-family:var(--fm);font-size:0.55rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:0.2rem;}
+.strip-val{font-family:var(--fh);font-size:1rem;font-weight:700;color:var(--accent);}
+.strip-desc{font-size:0.7rem;color:var(--muted);margin-top:0.1rem;}
+@media(max-width:500px){.strip-icon{display:none;}.strip-cell{padding:0.75rem;}  .strip-val{font-size:0.9rem;}}
+
+/* ── SECTION ── */
+.section{padding:2rem 1.25rem;max-width:1300px;margin:0 auto;}
+.sec-head{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
+.sec-title{font-family:var(--fh);font-size:1.1rem;font-weight:700;letter-spacing:-0.3px;}
+.sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+.sec-count{font-family:var(--fm);font-size:0.65rem;color:var(--accent);letter-spacing:1px;}
+
+/* ── WAIT LIST (mobile-first) ── */
+.wait-list{display:flex;flex-direction:column;gap:0.5rem;}
+.wait-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;}
+.wait-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.wait-item.ok::before{background:var(--low);}
+.wait-item.warn::before{background:var(--med);}
+.wait-item.danger::before{background:var(--high);}
+.wait-item.maint::before{background:var(--muted);}
+.wait-item.closed::before{background:var(--red);}
+.wait-item:hover{border-color:rgba(45,212,191,0.25);transform:translateX(2px);}
+.wi-icon{font-size:1.2rem;flex-shrink:0;width:28px;text-align:center;}
+.wi-name{flex:1;font-weight:500;font-size:0.88rem;line-height:1.3;}
+.wi-cat{font-size:0.65rem;color:var(--muted);margin-top:0.15rem;}
+.wi-right{display:flex;align-items:center;gap:0.5rem;flex-shrink:0;}
+.wi-status{font-family:var(--fm);font-size:0.82rem;font-weight:600;}
+.wi-status.ok{color:var(--low);}
+.wi-status.warn{color:var(--med);}
+.wi-status.danger{color:var(--high);}
+.wi-status.maint{color:var(--muted);}
+.wi-status.closed{color:var(--red);}
+.wi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.wi-dot.ok{background:var(--low);box-shadow:0 0 6px var(--low);}
+.wi-dot.warn{background:var(--med);box-shadow:0 0 6px var(--med);animation:pulse 2s infinite;}
+.wi-dot.danger{background:var(--high);box-shadow:0 0 6px var(--high);animation:pulse 1.5s infinite;}
+.wi-dot.maint{background:var(--muted);}
+.wi-dot.closed{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── SPECTACLE ITEM ── */
+.spec-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;cursor:pointer;transition:all 0.18s;}
+.spec-item:hover{border-color:rgba(129,140,248,0.3);}
+.spec-icon{width:38px;height:38px;border-radius:9px;background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.spec-name{font-weight:600;font-size:0.88rem;}
+.spec-times{display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.3rem;}
+.time-chip{padding:0.15rem 0.5rem;background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.2);border-radius:6px;font-family:var(--fm);font-size:0.65rem;color:var(--accent2);}
+.spec-status{margin-left:auto;flex-shrink:0;}
+
+/* ── CARDS GRID ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));opacity:0;transition:opacity 0.25s;}
+.card:hover{border-color:rgba(45,212,191,0.2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.3);}
+.card:hover::after{opacity:1;}
+.card-badge{display:inline-flex;align-items:center;gap:0.3rem;padding:0.2rem 0.6rem;border-radius:6px;font-family:var(--fm);font-size:0.6rem;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:0.75rem;}
+.cb-s{background:rgba(251,146,60,0.1);color:var(--accent3);border:1px solid rgba(251,146,60,0.2);}
+.cb-f{background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.2);}
+.cb-a{background:rgba(56,189,248,0.1);color:#38bdf8;border:1px solid rgba(56,189,248,0.2);}
+.cb-t{background:rgba(45,212,191,0.1);color:var(--accent);border:1px solid rgba(45,212,191,0.2);}
+.cb-sp{background:rgba(129,140,248,0.1);color:var(--accent2);border:1px solid rgba(129,140,248,0.2);}
+.card-title{font-family:var(--fh);font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;}
+.card-desc{font-size:0.78rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;}
+.card-footer{display:flex;align-items:center;gap:0.5rem;padding-top:0.75rem;border-top:1px solid var(--border);}
+.card-wait{font-family:var(--fm);font-size:0.82rem;font-weight:600;}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;}
+.fb-btn{padding:0.3rem 0.85rem;border-radius:100px;font-size:0.72rem;font-weight:500;cursor:pointer;transition:all 0.18s;border:1px solid var(--border);background:transparent;color:var(--muted);}
+.fb-btn:hover,.fb-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(45,212,191,0.07);}
+.fb-search{margin-left:auto;position:relative;}
+.fb-search input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:0.35rem 0.85rem 0.35rem 2rem;font-size:0.78rem;color:var(--text);width:180px;outline:none;transition:border-color 0.18s;font-family:var(--fb);}
+.fb-search input:focus{border-color:var(--accent);}
+.fb-search input::placeholder{color:var(--muted);}
+.fb-search::before{content:'⌕';position:absolute;left:0.6rem;top:50%;transform:translateY(-50%);font-size:0.9rem;color:var(--muted);}
+@media(max-width:640px){.fb-search{width:100%;margin-left:0;margin-top:0.25rem;}.fb-search input{width:100%;}}
+
+/* ── AQUASCOPE BANNER ── */
+.aqua-banner{background:linear-gradient(135deg,rgba(56,189,248,0.08),rgba(45,212,191,0.05));border:1px solid rgba(56,189,248,0.18);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:all 0.22s;}
+.aqua-banner:hover{border-color:rgba(56,189,248,0.35);transform:translateY(-1px);}
+.aqua-banner-icon{font-size:2rem;flex-shrink:0;}
+.aqua-banner-title{font-family:var(--fh);font-size:1rem;font-weight:700;color:#38bdf8;}
+.aqua-banner-sub{font-size:0.78rem;color:var(--muted);margin-top:0.15rem;}
+.aqua-banner-arrow{margin-left:auto;color:var(--muted);font-size:1.2rem;flex-shrink:0;}
+
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(7,8,15,0.85);backdrop-filter:blur(12px);z-index:2000;display:none;align-items:flex-end;justify-content:center;padding:0;}
+@media(min-width:600px){.modal-backdrop{align-items:center;padding:1.5rem;}}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:1.5rem;position:relative;}
+@media(min-width:600px){.modal{border-radius:20px;}}
+.modal-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.25rem;display:block;}
+@media(min-width:600px){.modal-drag{display:none;}}
+.modal-close{position:absolute;top:1rem;right:1rem;width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);cursor:pointer;color:var(--muted);font-size:0.9rem;display:flex;align-items:center;justify-content:center;transition:all 0.18s;}
+.modal-close:hover{color:var(--text);border-color:var(--accent);}
+.modal-title{font-family:var(--fh);font-size:1.2rem;font-weight:800;margin-bottom:0.5rem;}
+.modal-desc{font-size:0.83rem;color:var(--muted);line-height:1.7;margin-bottom:1.25rem;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.25rem;}
+.info-cell{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:0.75rem;}
+.info-cell-label{font-family:var(--fm);font-size:0.58rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:0.3rem;}
+.info-cell-val{font-family:var(--fh);font-size:0.88rem;font-weight:700;}
+.rest-list{list-style:none;display:flex;flex-direction:column;gap:0.35rem;}
+.rest-list li{font-size:0.78rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;}
+.rest-list li::before{content:'—';color:var(--accent3);font-size:0.7rem;}
+
+/* ── MAP ── */
+.map-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);}
+.map-img{width:100%;display:block;min-height:300px;object-fit:cover;}
+.map-pins{position:absolute;inset:0;pointer-events:none;}
+.map-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;z-index:10;}
+.pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,0.8);margin:0 auto;transition:transform 0.18s;box-shadow:0 0 10px currentColor;}
+.map-pin:hover .pin-dot{transform:scale(1.5);}
+.pin-label{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:2px 7px;font-family:var(--fm);font-size:0.55rem;color:var(--text);white-space:nowrap;opacity:0;transition:opacity 0.18s;pointer-events:none;z-index:20;}
+.map-pin:hover .pin-label{opacity:1;}
+.pin-s .pin-dot{background:var(--high);color:var(--high);}
+.pin-f .pin-dot{background:#34d399;color:#34d399;}
+.pin-a .pin-dot{background:#38bdf8;color:#38bdf8;}
+.pin-sp .pin-dot{background:var(--accent2);color:var(--accent2);}
+.pin-hub{transform:translate(-50%,-50%);}
+.pin-hub .pin-dot{width:22px;height:22px;border-width:3px;font-size:0.55rem;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;}
+.pin-hub-aqua .pin-dot{background:#0ea5e9;color:#0ea5e9;box-shadow:0 0 20px #0ea5e9;}
+.pin-hub-futuro .pin-dot{background:var(--accent2);color:var(--accent2);box-shadow:0 0 20px var(--accent2);}
+
+/* ── SUBMAP MODAL ── */
+.submap-modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:900px;max-height:92vh;overflow-y:auto;position:relative;}
+@media(min-width:600px){.submap-modal{border-radius:20px;}}
+.submap-img-wrap{position:relative;}
+.submap-img{width:100%;display:block;border-radius:14px;}
+.submap-pins{position:absolute;inset:0;pointer-events:none;}
+.submap-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
+.submap-pin .pin-dot{width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 8px currentColor;margin:0 auto;transition:transform 0.18s;}
+.submap-pin:hover .pin-dot{transform:scale(1.5);}
+.submap-pin .pin-label{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px 6px;font-family:var(--fm);font-size:0.52rem;white-space:nowrap;opacity:0;transition:opacity 0.18s;pointer-events:none;z-index:20;}
+.submap-pin:hover .pin-label{opacity:1;}
+
+/* ── FREQUENTATION ── */
+.cal-month{margin-bottom:1.5rem;}
+.cal-month-name{font-family:var(--fh);font-size:0.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:0.6rem;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-cell{aspect-ratio:1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:0.58rem;cursor:pointer;transition:all 0.18s;border:1px solid transparent;}
+.cal-cell:hover{border-color:var(--accent);transform:scale(1.15);}
+.cal-cell.hd{background:transparent;color:var(--muted);cursor:default;font-size:0.5rem;}
+.cal-cell.hd:hover{transform:none;border-color:transparent;}
+.cal-cell.empty{background:transparent;cursor:default;}
+.cal-cell.empty:hover{transform:none;border-color:transparent;}
+.cal-cell.faible{background:rgba(52,211,153,0.15);color:#34d399;}
+.cal-cell.moderee{background:rgba(250,204,21,0.15);color:#fbbf24;}
+.cal-cell.elevee{background:rgba(251,146,60,0.18);color:var(--high);}
+.cal-cell.aeviter{background:rgba(239,68,68,0.2);color:var(--red);}
+.cal-cell.today{border-color:var(--accent) !important;}
+.forecast-week{display:grid;grid-template-columns:repeat(7,1fr);gap:0.5rem;margin-bottom:2rem;}
+.fw-day{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:0.75rem 0.25rem;text-align:center;cursor:pointer;transition:all 0.18s;}
+.fw-day:hover{border-color:var(--accent);transform:translateY(-2px);}
+.fw-name{font-family:var(--fm);font-size:0.58rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:0.35rem;}
+.fw-date{font-size:0.65rem;color:var(--muted);margin-bottom:0.4rem;}
+.fw-level{font-family:var(--fh);font-size:0.62rem;font-weight:700;}
+.fw-level.faible{color:#34d399;}
+.fw-level.moderee{color:#fbbf24;}
+.fw-level.elevee{color:var(--high);}
+.fw-level.aeviter{color:var(--red);}
+@media(max-width:480px){.fw-name{font-size:0.5rem;}.fw-level{font-size:0.55rem;}}
+
+/* ── NEWS ── */
+.news-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;cursor:pointer;transition:all 0.18s;display:flex;gap:1rem;align-items:flex-start;}
+.news-item:hover{border-color:rgba(45,212,191,0.2);transform:translateX(3px);}
+.news-emoji{font-size:1.6rem;flex-shrink:0;width:36px;text-align:center;}
+.news-cat{font-family:var(--fm);font-size:0.58rem;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:0.3rem;}
+.news-title-t{font-family:var(--fh);font-size:0.9rem;font-weight:700;margin-bottom:0.3rem;}
+.news-excerpt{font-size:0.78rem;color:var(--muted);line-height:1.6;}
+.news-meta{display:flex;gap:0.75rem;margin-top:0.5rem;font-size:0.7rem;color:var(--muted);font-family:var(--fm);}
+
+/* ── ADMIN ── */
+.admin-wrap{display:grid;grid-template-columns:1fr;min-height:calc(100vh - 60px);}
+@media(min-width:900px){.admin-wrap{grid-template-columns:220px 1fr;}}
+.admin-side{background:var(--bg2);border-right:1px solid var(--border);padding:1.25rem 0;}
+.adm-s-title{font-family:var(--fm);font-size:0.6rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0 1.25rem;margin-bottom:0.5rem;margin-top:1rem;}
+.adm-s-title:first-child{margin-top:0;}
+.adm-menu-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1.25rem;cursor:pointer;font-size:0.82rem;color:var(--muted);transition:all 0.18s;border-left:2px solid transparent;}
+.adm-menu-item:hover,.adm-menu-item.active{color:var(--accent);background:rgba(45,212,191,0.04);border-left-color:var(--accent);}
+.adm-main{padding:1.5rem;overflow-y:auto;}
+.adm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+.adm-title{font-family:var(--fh);font-size:1rem;font-weight:700;}
+.adm-table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+.adm-table th{text-align:left;font-family:var(--fm);font-size:0.6rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0.6rem 0.85rem;border-bottom:1px solid var(--border);}
+.adm-table td{padding:0.65rem 0.85rem;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.adm-table tr:hover td{background:rgba(255,255,255,0.015);}
+.status-pill{display:inline-flex;align-items:center;gap:0.25rem;padding:0.18rem 0.5rem;border-radius:100px;font-family:var(--fm);font-size:0.58rem;letter-spacing:0.5px;text-transform:uppercase;}
+.sp-open{background:rgba(52,211,153,0.1);color:#34d399;}
+.sp-maint{background:rgba(251,146,60,0.1);color:var(--high);}
+.sp-closed{background:rgba(248,113,113,0.1);color:var(--red);}
+.action-row{display:flex;gap:0.35rem;flex-wrap:wrap;}
+.act-btn{padding:0.22rem 0.55rem;border-radius:6px;font-size:0.7rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all 0.18s;white-space:nowrap;}
+.act-btn:hover{border-color:var(--accent);color:var(--accent);}
+.act-btn.danger:hover{border-color:var(--red);color:var(--red);}
+.form-group{margin-bottom:1rem;}
+.form-label{display:block;font-family:var(--fm);font-size:0.62rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:0.35rem;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.85rem;color:var(--text);font-family:var(--fb);font-size:0.84rem;outline:none;transition:border-color 0.18s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-select option{background:var(--bg3);}
+.form-textarea{resize:vertical;min-height:85px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;}
+.adm-form-panel{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;display:none;}
+.adm-form-panel.open{display:block;}
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;margin-bottom:1.5rem;}
+@media(min-width:700px){.stat-row{grid-template-columns:repeat(4,1fr);}}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;}
+.stat-n{font-family:var(--fh);font-size:1.6rem;font-weight:800;color:var(--accent);display:block;margin-bottom:0.15rem;}
+.stat-l{font-family:var(--fm);font-size:0.6rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+/* ── PLANNER ── */
+.planner-steps{max-width:600px;margin:0 auto;}
+.planner-q{margin-bottom:2rem;}
+.planner-q-text{font-family:var(--fh);font-size:1.05rem;font-weight:700;margin-bottom:1rem;}
+.planner-opts{display:flex;flex-direction:column;gap:0.5rem;}
+.planner-opt{padding:0.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:0.85rem;transition:all 0.18s;display:flex;align-items:center;gap:0.75rem;}
+.planner-opt:hover{border-color:var(--accent);color:var(--accent);}
+.planner-opt.selected{border-color:var(--accent);background:rgba(45,212,191,0.07);color:var(--accent);}
+.planner-result{background:var(--bg2);border:1px solid rgba(45,212,191,0.2);border-radius:var(--radius);padding:1.5rem;}
+.planner-step-item{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--border);}
+.planner-step-item:last-child{border-bottom:none;}
+.planner-step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#07080f;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:0.78rem;font-weight:800;flex-shrink:0;}
+.planner-step-content{flex:1;}
+.planner-step-title{font-family:var(--fh);font-size:0.9rem;font-weight:700;margin-bottom:0.2rem;}
+.planner-step-desc{font-size:0.78rem;color:var(--muted);line-height:1.6;}
+.planner-step-time{font-family:var(--fm);font-size:0.65rem;color:var(--accent);margin-top:0.2rem;}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:2rem;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 0.4s;}
+
+/* ── AUTH SCREEN ── */
+.auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:3000;padding:1.25rem;}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2rem;width:100%;max-width:380px;position:relative;}
+.auth-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:20px 20px 0 0;}
+.auth-title{font-family:var(--fh);font-size:1.2rem;font-weight:800;margin-bottom:0.25rem;}
+.auth-sub{font-size:0.8rem;color:var(--muted);margin-bottom:1.5rem;}
+.auth-error{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);color:var(--red);padding:0.5rem 0.85rem;border-radius:8px;font-size:0.78rem;margin-bottom:0.85rem;display:none;}
+.auth-toggle{margin-top:1rem;text-align:center;font-size:0.78rem;color:var(--muted);}
+.auth-toggle span{color:var(--accent);cursor:pointer;}
+.auth-toggle span:hover{text-decoration:underline;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg2);border:1px solid rgba(45,212,191,0.3);border-radius:10px;padding:0.65rem 1.25rem;font-size:0.82rem;color:var(--neon);z-index:9999;opacity:0;transition:all 0.3s;white-space:nowrap;max-width:calc(100vw - 2rem);text-align:center;}
+@media(min-width:768px){.bottom-nav~*>.toast,.toast{bottom:1.5rem;}}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── HORAIRES TABLE ── */
+.hor-table{width:100%;border-collapse:collapse;background:var(--bg2);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);}
+.hor-table th{background:rgba(45,212,191,0.04);font-family:var(--fm);font-size:0.6rem;letter-spacing:2px;color:var(--accent);text-transform:uppercase;padding:0.85rem 1.25rem;text-align:left;border-bottom:1px solid var(--border);}
+.hor-table td{padding:0.8rem 1.25rem;border-bottom:1px solid var(--border);font-size:0.82rem;}
+.hor-table tr:last-child td{border-bottom:none;}
+.today-row td{background:rgba(45,212,191,0.03);}
+
+/* ── MAP EDITOR ── */
+.map-editor-wrap{position:relative;border:2px dashed rgba(45,212,191,0.2);border-radius:12px;overflow:hidden;cursor:crosshair;}
+.map-editor-img{width:100%;display:block;opacity:0.75;}
+.ed-pin{position:absolute;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.8);cursor:grab;transition:transform 0.1s;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:#fff;font-weight:700;}
+.ed-pin:active{cursor:grabbing;transform:translate(-50%,-50%) scale(1.3);}
+.ed-label{position:absolute;top:22px;left:50%;transform:translateX(-50%);background:var(--bg);padding:2px 6px;border-radius:4px;font-size:0.5rem;font-family:var(--fm);white-space:nowrap;pointer-events:none;border:1px solid var(--border);}
+.ed-pin-selected{box-shadow:0 0 0 3px var(--accent);}
+.map-sel-list{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+.map-sel-item{padding:0.5rem 0.75rem;border-radius:8px;cursor:pointer;font-size:0.78rem;color:var(--muted);transition:all 0.15s;border:1px solid transparent;}
+.map-sel-item:hover,.map-sel-item.active{background:rgba(45,212,191,0.06);color:var(--accent);border-color:rgba(45,212,191,0.15);}
+
+/* ── MISC ── */
+.divider{height:1px;background:var(--border);margin:2rem 0;}
+.tag-row{display:flex;gap:0.4rem;flex-wrap:wrap;}
+.tag{padding:0.2rem 0.55rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;font-size:0.7rem;color:var(--muted);font-family:var(--fm);}
+.hidden{display:none!important;}
+.update-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--low);box-shadow:0 0 5px var(--low);animation:pulse 2s infinite;margin-right:4px;vertical-align:middle;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 1rem;box-shadow:0 0 25px rgba(45,212,191,0.2);}
+</style>
+</head>
+<body>
+
+<!-- AUTH MODAL -->
+<div class="auth-screen hidden" id="authScreen">
+  <div class="auth-box">
+    <button onclick="closeAuth()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;">✕</button>
+    <div id="authContent"></div>
+  </div>
+</div>
+
+<!-- MAIN MODAL -->
+<div class="modal-backdrop" id="mainModal">
+  <div class="modal" id="mainModalBox">
+    <span class="modal-drag"></span>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="mainModalBody"></div>
+  </div>
+</div>
+
+<!-- SUBMAP MODAL -->
+<div class="modal-backdrop" id="submapModal">
+  <div class="submap-modal" id="submapBox">
+    <div style="padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <div class="modal-title" id="submapTitle">Plan</div>
+      <button class="modal-close" style="position:static" onclick="closeSubmap()">✕</button>
+    </div>
+    <div style="padding:1.25rem">
+      <div class="submap-img-wrap" id="submapImgWrap">
+        <img class="submap-img" id="submapImg" src="" alt="Plan"/>
+        <div class="submap-pins" id="submapPins"></div>
+      </div>
+      <div class="wait-list" id="submapList" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"></div>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div class="logo">RIDE<span>ORA</span></div>
+
+  <div class="park-selector">
+    <div class="park-select-btn" onclick="toggleParkDropdown()">
+      <span id="parkSelectorLabel">Futuroscope</span>
+      <span style="color:var(--muted);font-size:0.7rem;">▾</span>
+    </div>
+    <div class="park-dropdown" id="parkDropdown">
+      <div class="park-opt active" onclick="selectPark('futuroscope')">
+        <span>Futuroscope</span>
+      </div>
+      <div class="park-opt" onclick="toast(T('soon'))">
+        <span style="color:var(--muted)">Disneyland Paris</span>
+        <span class="badge-new">Bientôt</span>
+      </div>
+      <div class="park-opt" onclick="toast(T('soon'))">
+        <span style="color:var(--muted)">Puy du Fou</span>
+        <span class="badge-new">Bientôt</span>
+      </div>
+      <div class="park-opt" onclick="toast(T('soon'))">
+        <span style="color:var(--muted)">Europa-Park</span>
+        <span class="badge-new">Bientôt</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-center">
+    <button class="nav-link active" onclick="showPage('home')" id="nl-home" data-i18n="nav_home">Accueil</button>
+    <button class="nav-link" onclick="showPage('waits')" id="nl-waits" data-i18n="nav_waits">Attentes</button>
+    <button class="nav-link" onclick="showPage('freq')" id="nl-freq" data-i18n="nav_freq">Fréquentation</button>
+    <button class="nav-link" onclick="showPage('news')" id="nl-news" data-i18n="nav_news">Actus</button>
+    <button class="nav-link" onclick="showPage('map')" id="nl-map" data-i18n="nav_map">Carte</button>
+    <button class="nav-link" onclick="showPage('planner')" id="nl-planner" data-i18n="nav_planner">Planifier</button>
+  </nav>
+
+  <div class="topbar-right">
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('fr')" id="lang-fr" title="Français">🇫🇷</button>
+      <button class="lang-btn" onclick="setLang('en')" id="lang-en" title="English">🇬🇧</button>
+      <button class="lang-btn" onclick="setLang('es')" id="lang-es" title="Español">🇪🇸</button>
+    </div>
+    <div id="userAvatarBtn" onclick="openAuthOrProfile()" style="display:none">
+      <div class="user-avatar" id="userAvatar">?</div>
+    </div>
+    <button class="btn-sm btn-ghost" onclick="showAuthScreen('login')" id="loginBtn" data-i18n="btn_login">Connexion</button>
+  </div>
+</nav>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <div class="bn-item active" onclick="showPage('home')" id="bn-home">
+    <span class="bn-icon">⌂</span>
+    <span data-i18n="nav_home">Accueil</span>
+  </div>
+  <div class="bn-item" onclick="showPage('waits')" id="bn-waits">
+    <span class="bn-icon">◷</span>
+    <span data-i18n="nav_waits">Attentes</span>
+  </div>
+  <div class="bn-item" onclick="showPage('freq')" id="bn-freq">
+    <span class="bn-icon">◫</span>
+    <span data-i18n="nav_freq">Affluence</span>
+  </div>
+  <div class="bn-item" onclick="showPage('map')" id="bn-map">
+    <span class="bn-icon">⊕</span>
+    <span data-i18n="nav_map">Carte</span>
+  </div>
+  <div class="bn-item" onclick="showPage('planner')" id="bn-planner">
+    <span class="bn-icon">✦</span>
+    <span data-i18n="nav_planner">Plan</span>
+  </div>
+</nav>
+
+<!-- ══ PAGE HOME ══ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-eyebrow" data-i18n="eyebrow">Futuroscope · Poitiers, France</div>
+    <h1 class="hero-title"><span data-i18n="hero_line1">Évite les files.</span><br><span class="gr" data-i18n="hero_line2">Profite de chaque attraction.</span></h1>
+    <p class="hero-sub" data-i18n="hero_sub">Temps d'attente en direct, fréquentation prévisionnelle et planification de votre visite.</p>
+    <div class="hero-ctas">
+      <button class="btn-hero bh-primary" onclick="showPage('waits')" data-i18n="cta_waits">Temps d'attente live</button>
+      <button class="btn-hero bh-outline" onclick="showPage('planner')" data-i18n="cta_plan">Planifier ma visite</button>
+    </div>
+  </div>
+
+  <div class="info-strip">
+    <div class="strip-cell">
+      <div class="strip-icon" id="homeWeatherIcon">—</div>
+      <div>
+        <div class="strip-label" data-i18n="strip_weather">Météo</div>
+        <div class="strip-val" id="homeWeatherVal">—°C</div>
+        <div class="strip-desc" id="homeWeatherDesc">Poitiers</div>
+      </div>
+    </div>
+    <div class="strip-cell">
+      <div class="strip-icon">◷</div>
+      <div>
+        <div class="strip-label" data-i18n="strip_hours">Horaires</div>
+        <div class="strip-val">09:30 — 18:30</div>
+        <div class="strip-desc" id="parkStatusDesc">Ouvert</div>
+      </div>
+    </div>
+    <div class="strip-cell">
+      <div class="strip-icon">◈</div>
+      <div>
+        <div class="strip-label" data-i18n="strip_crowd">Affluence</div>
+        <div class="strip-val" id="homeCrowdVal">—</div>
+        <div class="strip-desc" id="homeCrowdDesc">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><div class="sec-title" data-i18n="sec_schedule">Horaires de la semaine</div><div class="sec-line"></div></div>
+    <table class="hor-table" style="margin-bottom:2.5rem" id="scheduleTable"></table>
+
+    <div class="sec-head"><div class="sec-title" data-i18n="sec_shows">Spectacles du jour</div><div class="sec-line"></div></div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2.5rem" id="homeShows"></div>
+
+    <div class="sec-head"><div class="sec-title" data-i18n="sec_overview">En un coup d'œil</div><div class="sec-line"></div></div>
+    <div class="stat-row" id="homeStats"></div>
+
+    <div class="sec-head" style="margin-top:1.5rem"><div class="sec-title" data-i18n="sec_practical">Infos pratiques</div><div class="sec-line"></div></div>
+    <div class="cards-grid" id="homePractical"></div>
+  </div>
+</div>
+
+<!-- ══ PAGE WAITS ══ -->
+<div class="page" id="page-waits">
+  <div class="section">
+    <div class="sec-head">
+      <div class="sec-title" data-i18n="page_waits_title">Temps d'attente</div>
+      <div class="sec-line"></div>
+      <div class="sec-count"><span class="update-dot"></span><span id="waitUpdateTime">—</span></div>
+    </div>
+
+    <div class="aqua-banner" onclick="openSubmapAqua()">
+      <div class="aqua-banner-icon">〰</div>
+      <div>
+        <div class="aqua-banner-title">Aquascope</div>
+        <div class="aqua-banner-sub" data-i18n="aqua_sub">Espace aquatique · Toboggans · Bassins</div>
+      </div>
+      <div class="aqua-banner-arrow">→</div>
+    </div>
+
+    <div class="filter-bar" id="waitFilterBar">
+      <button class="fb-btn active" onclick="filterWaits('all',this)" data-i18n="filter_all">Tout</button>
+      <button class="fb-btn" onclick="filterWaits('sensation',this)" data-i18n="filter_s">Sensations</button>
+      <button class="fb-btn" onclick="filterWaits('famille',this)" data-i18n="filter_f">Famille</button>
+      <button class="fb-btn" onclick="filterWaits('enfant',this)" data-i18n="filter_k">Enfants</button>
+      <button class="fb-btn" onclick="filterWaits('spectacle',this)" data-i18n="filter_sp">Spectacles</button>
+      <div class="fb-search"><input type="text" id="waitSearch" placeholder="Rechercher…" oninput="searchWaits(this.value)" data-i18n-placeholder="search_ph"/></div>
+    </div>
+
+    <div class="wait-list" id="waitList"></div>
+
+    <div class="sec-head" style="margin-top:2rem">
+      <div class="sec-title" data-i18n="sec_shows">Spectacles</div>
+      <div class="sec-line"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem" id="showsList"></div>
+  </div>
+</div>
+
+<!-- ══ PAGE FREQUENTATION ══ -->
+<div class="page" id="page-freq">
+  <div class="section">
+    <div class="sec-head"><div class="sec-title" data-i18n="page_freq_title">Prévisions d'affluence 2026</div><div class="sec-line"></div></div>
+
+    <div style="font-family:var(--fm);font-size:0.62rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:0.75rem" data-i18n="next7">7 prochains jours</div>
+    <div class="forecast-week" id="forecastWeek"></div>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:#34d399"><div style="width:10px;height:10px;border-radius:3px;background:rgba(52,211,153,0.3)"></div><span data-i18n="lbl_low">Faible</span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:#fbbf24"><div style="width:10px;height:10px;border-radius:3px;background:rgba(250,204,21,0.3)"></div><span data-i18n="lbl_med">Modérée</span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--high)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(251,146,60,0.3)"></div><span data-i18n="lbl_high">Élevée</span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--red)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(239,68,68,0.3)"></div><span data-i18n="lbl_avoid">À éviter</span></div>
+    </div>
+
+    <div id="annualCal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;"></div>
+
+    <div style="margin-top:1.5rem;background:rgba(45,212,191,0.04);border:1px solid rgba(45,212,191,0.12);border-radius:var(--radius);padding:1.25rem;">
+      <div style="font-family:var(--fh);font-size:0.82rem;font-weight:700;color:var(--accent);margin-bottom:0.5rem" data-i18n="tip_title">Conseil visite</div>
+      <p style="font-size:0.8rem;color:var(--muted);line-height:1.7" data-i18n="tip_text">Les meilleures périodes sont les jours de semaine hors vacances scolaires, en septembre et octobre. Évitez les week-ends de juillet et août.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE NEWS ══ -->
+<div class="page" id="page-news">
+  <div class="section">
+    <div class="sec-head"><div class="sec-title" data-i18n="page_news_title">Actualités</div><div class="sec-line"></div></div>
+    <div class="filter-bar">
+      <button class="fb-btn active" onclick="filterNews('all',this)" data-i18n="filter_all">Toutes</button>
+      <button class="fb-btn" onclick="filterNews('ouverture',this)" data-i18n="news_opening">Ouvertures</button>
+      <button class="fb-btn" onclick="filterNews('evenement',this)" data-i18n="news_event">Événements</button>
+      <button class="fb-btn" onclick="filterNews('maintenance',this)" data-i18n="news_maint">Maintenance</button>
+      <button class="fb-btn" onclick="filterNews('info',this)" data-i18n="news_info">Infos</button>
+      <div class="fb-search"><input type="text" placeholder="Rechercher…" oninput="searchNews(this.value)"/></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.75rem" id="newsList"></div>
+  </div>
+</div>
+
+<!-- ══ PAGE MAP ══ -->
+<div class="page" id="page-map">
+  <div class="section">
+    <div class="sec-head"><div class="sec-title" data-i18n="page_map_title">Carte du parc</div><div class="sec-line"></div></div>
+
+    <div class="filter-bar">
+      <button class="fb-btn active" onclick="filterPins('all',this)" data-i18n="filter_all">Tout</button>
+      <button class="fb-btn" onclick="filterPins('sensation',this)" data-i18n="filter_s">Sensations</button>
+      <button class="fb-btn" onclick="filterPins('famille',this)" data-i18n="filter_f">Famille</button>
+      <button class="fb-btn" onclick="filterPins('spectacle',this)" data-i18n="filter_sp">Spectacles</button>
+    </div>
+
+    <div class="map-wrap" id="mainMapWrap">
+      <img src="1776036265731_image.png" class="map-img" id="mainMapImg" alt="Carte Futuroscope" onerror="this.style.background='var(--bg3)';this.style.minHeight='400px'"/>
+      <div class="map-pins" id="mainMapPins"></div>
+    </div>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.75rem;">
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--high);box-shadow:0 0 6px var(--high)"></div><span data-i18n="filter_s">Sensations</span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399"></div><span data-i18n="filter_f">Famille</span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent2);box-shadow:0 0 6px var(--accent2)"></div><span data-i18n="filter_sp">Spectacles</span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#0ea5e9;box-shadow:0 0 6px #0ea5e9"></div>Aquascope / Futuropolis</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE PLANNER ══ -->
+<div class="page" id="page-planner">
+  <div class="section" style="max-width:700px;margin:0 auto">
+    <div class="sec-head"><div class="sec-title" data-i18n="page_planner_title">Planificateur de visite</div><div class="sec-line"></div></div>
+    <div class="progress-bar"><div class="progress-fill" id="plannerProgress" style="width:0%"></div></div>
+    <div id="plannerContent"></div>
+  </div>
+</div>
+
+<!-- ══ PAGE ADMIN ══ -->
+<div class="page" id="page-admin">
+  <div class="admin-wrap">
+    <div class="admin-side" id="adminSide">
+      <div class="adm-s-title">Navigation</div>
+      <div class="adm-menu-item active" onclick="adminSection('dashboard')">◈ Dashboard</div>
+      <div class="adm-menu-item" onclick="adminSection('attractions')">◎ Attractions</div>
+      <div class="adm-menu-item" onclick="adminSection('shows')">◇ Spectacles</div>
+      <div class="adm-menu-item" onclick="adminSection('news')">◉ Actualités</div>
+      <div class="adm-menu-item" onclick="adminSection('map')">⊕ Carte — Positions</div>
+      <div class="adm-s-title">Compte</div>
+      <div class="adm-menu-item" onclick="adminSection('profile')">○ Profil</div>
+      <div class="adm-menu-item" onclick="adminSection('users')">◎ Utilisateurs</div>
+      <div class="adm-menu-item" style="margin-top:2rem;color:var(--red)" onclick="logout()">→ Déconnexion</div>
+    </div>
+    <div class="adm-main" id="adminMain"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  I18N
+// ═══════════════════════════════════════════════════════
+const TRANSLATIONS = {
+  fr:{
+    nav_home:'Accueil',nav_waits:'Attentes',nav_freq:'Affluence',nav_news:'Actus',nav_map:'Carte',nav_planner:'Planifier',
+    btn_login:'Connexion',eyebrow:'Futuroscope · Poitiers, France',
+    hero_line1:'Évite les files.',hero_line2:'Profite de chaque attraction.',
+    hero_sub:'Temps d\'attente en direct, fréquentation prévisionnelle et planification de votre visite.',
+    cta_waits:'Attentes live',cta_plan:'Planifier ma visite',
+    strip_weather:'Météo',strip_hours:'Horaires',strip_crowd:'Affluence',
+    sec_schedule:'Horaires de la semaine',sec_shows:'Spectacles du jour',sec_overview:'En un coup d\'œil',sec_practical:'Infos pratiques',
+    page_waits_title:'Temps d\'attente',page_freq_title:'Prévisions d\'affluence 2026',page_news_title:'Actualités',page_map_title:'Carte du parc',page_planner_title:'Planificateur de visite',
+    filter_all:'Tout',filter_s:'Sensations',filter_f:'Famille',filter_k:'Enfants',filter_sp:'Spectacles',search_ph:'Rechercher…',
+    aqua_sub:'Espace aquatique · Toboggans · Bassins',
+    next7:'7 prochains jours',lbl_low:'Faible',lbl_med:'Modérée',lbl_high:'Élevée',lbl_avoid:'À éviter',
+    tip_title:'Conseil visite',tip_text:'Les meilleures périodes sont les jours de semaine hors vacances scolaires, en septembre et octobre. Évitez les week-ends de juillet et août.',
+    news_opening:'Ouvertures',news_event:'Événements',news_maint:'Maintenance',news_info:'Infos',
+    status_open:'Ouvert',status_maint:'Maintenance',status_closed:'Fermé',status_wait:'min',status_nowait:'Sans attente',
+    days:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],months:['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'],
+    lbl_height:'Taille requise',lbl_wait:'Temps d\'attente',lbl_status:'Statut',lbl_contra:'Déconseillé',lbl_times:'Horaires',
+    soon:'Bientôt disponible !',
+    plan_q1:'Quel est votre parc ?',plan_q2:'Avec qui venez-vous ?',plan_q3:'Vos priorités ?',plan_q4:'Durée de visite',plan_q5:'Avez-vous des contraintes ?',
+    plan_a_alone:'Seul(e)',plan_a_couple:'En couple',plan_a_family:'En famille (enfants)',plan_a_friends:'Entre amis',
+    plan_a_thrill:'Sensations fortes',plan_a_shows:'Spectacles',plan_a_aqua:'Aquatique',plan_a_relax:'Détente',
+    plan_a_half:'Demi-journée (~4h)',plan_a_full:'Journée complète',plan_a_2days:'2 jours',
+    plan_a_height:'Contrainte de taille',plan_a_none:'Aucune',plan_a_pmr:'Mobilité réduite',
+    plan_result_title:'Votre programme suggéré',plan_next:'Suivant',plan_restart:'Recommencer',
+    no_wait:'—',wait_unit:'min',
+  },
+  en:{
+    nav_home:'Home',nav_waits:'Wait Times',nav_freq:'Crowds',nav_news:'News',nav_map:'Map',nav_planner:'Plan',
+    btn_login:'Login',eyebrow:'Futuroscope · Poitiers, France',
+    hero_line1:'Skip the lines.',hero_line2:'Enjoy every ride.',
+    hero_sub:'Live wait times, crowd forecasts and trip planning for your visit.',
+    cta_waits:'Live wait times',cta_plan:'Plan my visit',
+    strip_weather:'Weather',strip_hours:'Opening hours',strip_crowd:'Crowds',
+    sec_schedule:'Weekly schedule',sec_shows:'Today\'s shows',sec_overview:'At a glance',sec_practical:'Practical info',
+    page_waits_title:'Wait Times',page_freq_title:'2026 Crowd Forecast',page_news_title:'News',page_map_title:'Park Map',page_planner_title:'Visit Planner',
+    filter_all:'All',filter_s:'Thrill rides',filter_f:'Family',filter_k:'Kids',filter_sp:'Shows',search_ph:'Search…',
+    aqua_sub:'Water world · Slides · Pools',
+    next7:'Next 7 days',lbl_low:'Low',lbl_med:'Moderate',lbl_high:'High',lbl_avoid:'Avoid',
+    tip_title:'Visit tip',tip_text:'Best times to visit are weekdays outside school holidays, especially September and October. Avoid July and August weekends.',
+    news_opening:'Openings',news_event:'Events',news_maint:'Maintenance',news_info:'Info',
+    status_open:'Open',status_maint:'Maintenance',status_closed:'Closed',status_wait:'min',status_nowait:'No wait',
+    days:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    lbl_height:'Height requirement',lbl_wait:'Wait time',lbl_status:'Status',lbl_contra:'Not recommended for',lbl_times:'Show times',
+    soon:'Coming soon!',
+    plan_q1:'Which park?',plan_q2:'Who are you visiting with?',plan_q3:'Your priorities?',plan_q4:'Visit duration',plan_q5:'Any constraints?',
+    plan_a_alone:'Solo',plan_a_couple:'Couple',plan_a_family:'Family (with kids)',plan_a_friends:'Friends',
+    plan_a_thrill:'Thrill rides',plan_a_shows:'Shows',plan_a_aqua:'Water rides',plan_a_relax:'Relax',
+    plan_a_half:'Half day (~4h)',plan_a_full:'Full day',plan_a_2days:'2 days',
+    plan_a_height:'Height restriction',plan_a_none:'None',plan_a_pmr:'Reduced mobility',
+    plan_result_title:'Your suggested schedule',plan_next:'Next',plan_restart:'Start over',
+    no_wait:'—',wait_unit:'min',
+  },
+  es:{
+    nav_home:'Inicio',nav_waits:'Esperas',nav_freq:'Afluencia',nav_news:'Noticias',nav_map:'Mapa',nav_planner:'Planificar',
+    btn_login:'Entrar',eyebrow:'Futuroscope · Poitiers, Francia',
+    hero_line1:'Evita las colas.',hero_line2:'Disfruta cada atracción.',
+    hero_sub:'Tiempos de espera en directo, previsiones de afluencia y planificación de tu visita.',
+    cta_waits:'Esperas en directo',cta_plan:'Planificar mi visita',
+    strip_weather:'Tiempo',strip_hours:'Horarios',strip_crowd:'Afluencia',
+    sec_schedule:'Horarios de la semana',sec_shows:'Espectáculos de hoy',sec_overview:'De un vistazo',sec_practical:'Información práctica',
+    page_waits_title:'Tiempos de espera',page_freq_title:'Previsión de afluencia 2026',page_news_title:'Noticias',page_map_title:'Mapa del parque',page_planner_title:'Planificador de visita',
+    filter_all:'Todo',filter_s:'Emociones',filter_f:'Familia',filter_k:'Niños',filter_sp:'Espectáculos',search_ph:'Buscar…',
+    aqua_sub:'Espacio acuático · Toboganes · Piscinas',
+    next7:'Próximos 7 días',lbl_low:'Baja',lbl_med:'Moderada',lbl_high:'Alta',lbl_avoid:'Evitar',
+    tip_title:'Consejo de visita',tip_text:'Los mejores períodos son los días laborables fuera de vacaciones escolares, especialmente septiembre y octubre. Evita los fines de semana de julio y agosto.',
+    news_opening:'Aperturas',news_event:'Eventos',news_maint:'Mantenimiento',news_info:'Info',
+    status_open:'Abierto',status_maint:'Mantenimiento',status_closed:'Cerrado',status_wait:'min',status_nowait:'Sin espera',
+    days:['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],months:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+    lbl_height:'Altura requerida',lbl_wait:'Tiempo de espera',lbl_status:'Estado',lbl_contra:'No recomendado para',lbl_times:'Horarios',
+    soon:'¡Próximamente!',
+    plan_q1:'¿Qué parque?',plan_q2:'¿Con quién visitas?',plan_q3:'¿Tus prioridades?',plan_q4:'Duración de la visita',plan_q5:'¿Alguna restricción?',
+    plan_a_alone:'Solo/a',plan_a_couple:'Pareja',plan_a_family:'Familia (con niños)',plan_a_friends:'Amigos',
+    plan_a_thrill:'Emociones fuertes',plan_a_shows:'Espectáculos',plan_a_aqua:'Acuático',plan_a_relax:'Relajación',
+    plan_a_half:'Media jornada (~4h)',plan_a_full:'Jornada completa',plan_a_2days:'2 días',
+    plan_a_height:'Restricción de altura',plan_a_none:'Ninguna',plan_a_pmr:'Movilidad reducida',
+    plan_result_title:'Tu programa sugerido',plan_next:'Siguiente',plan_restart:'Empezar de nuevo',
+    no_wait:'—',wait_unit:'min',
+  }
+};
+let LANG = 'fr';
+function T(k){return TRANSLATIONS[LANG][k]||TRANSLATIONS.fr[k]||k;}
+function setLang(l){
+  LANG=l;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('lang-'+l).classList.add('active');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.dataset.i18n;
+    if(TRANSLATIONS[l][key])el.textContent=TRANSLATIONS[l][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const key=el.dataset.i18nPlaceholder;
+    if(TRANSLATIONS[l][key])el.placeholder=TRANSLATIONS[l][key];
+  });
+  // Re-render active page
+  renderCurrentPage();
+}
+
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+let ATTRACTIONS = [
+  {id:'mars',name:'Destination Mars',cat:'sensation',desc:'Montagne russe simulant un entraînement d\'astronautes. Accélérations, décors futuristes en intérieur et extérieur.',taille:'1,10m minimum',deconseille:'Femmes enceintes, cardiaques, dos/cou',wait:null,status:'open',x:70,y:25},
+  {id:'voyage',name:"L'Extraordinaire Voyage",cat:'sensation',desc:'Simulateur de vol suspendu survolant la Terre. Sièges en mouvement reproduisant des sensations de vol.',taille:'1,05m minimum',deconseille:'Vertiges, dos/cou, femmes enceintes',wait:null,status:'open',x:45,y:28},
+  {id:'bermudes',name:'Mission Bermudes',cat:'sensation',desc:'Parcours aquatique dans le Triangle des Bermudes. Accélérations, rapides, effets spéciaux et chute finale.',taille:'1,05m / 1,40m seul',deconseille:'Femmes enceintes, dos/cou, cardiaques',wait:null,status:'open',x:62,y:38},
+  {id:'tornades',name:'Chasseurs de Tornades',cat:'sensation',desc:'Simulateur dynamique avec vent, vibrations et effets spéciaux météorologiques extrêmes.',taille:'1,05m / 1,40m seul',deconseille:'Femmes enceintes, cardiaques, dos/cou, épilepsie',wait:null,status:'open',x:55,y:32},
+  {id:'robots',name:'Danse avec les Robots',cat:'sensation',desc:'Bras robotisé géant. Mouvements permettant de danser dans les airs à différents niveaux d\'intensité.',taille:'1,20m — 2,00m max',deconseille:'Femmes enceintes, dos/cou, fortes accélérations',wait:null,status:'open',x:78,y:35},
+  {id:'hydro',name:'Hydro Dynamo',cat:'sensation',desc:'Attraction aquatique dynamique combinant mouvements rapides, effets d\'eau et glisse.',taille:'1,05m minimum',deconseille:'Dos/cou, femmes enceintes',wait:null,status:'open',x:50,y:45},
+  {id:'aerobar',name:"L'Aérobar",cat:'sensation',desc:'Bar suspendu à plusieurs mètres de hauteur avec vue panoramique sur le parc.',taille:'1,10m minimum',deconseille:'Vertiges, peur du vide',wait:null,status:'open',x:65,y:48},
+  {id:'arthur',name:"Arthur, l'aventure 4D",cat:'famille',desc:'Images 3D, mouvements de sièges, vent et eau. Inspiré de l\'univers d\'Arthur et les Minimoys.',taille:'1,05m minimum',deconseille:'Sensibilité aux effets 4D',wait:null,status:'open',x:38,y:42},
+  {id:'vienne',name:'La Vienne Dynamique',cat:'famille',desc:'Film dynamique retraçant la découverte du territoire de la Vienne. Sièges mobiles et effets sensoriels.',taille:'1,05m minimum',deconseille:'Femmes enceintes, dos/cou, vertiges',wait:null,status:'open',x:35,y:35},
+  {id:'yeuxfermes',name:'Les Yeux Grands Fermés',cat:'famille',desc:'Parcours dans l\'obscurité totale. Progression uniquement avec les autres sens.',taille:'~1,05m minimum',deconseille:'Claustrophobie, anxiété dans le noir',wait:null,status:'open',x:42,y:55},
+  {id:'dynamic',name:'Dynamic!',cat:'famille',desc:'Cinéma dynamique combinant projection et sièges mobiles suivant les actions du film.',taille:'1,20m minimum',deconseille:'Femmes enceintes, cardiaques, dos/cou',wait:null,status:'open',x:30,y:48},
+  {id:'lapins',name:'La Machine à Voyager dans le Temps',cat:'famille',desc:'Attraction interactive avec les Lapins Crétins voyageant à travers différentes époques.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:25,y:40},
+  {id:'trex',name:'T. Rex',cat:'famille',desc:'Expérience immersive autour des dinosaures dans un décor préhistorique.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:20,y:55},
+  {id:'serre',name:'La Serre des Mondes',cat:'famille',desc:'Parcours immersif dans un environnement végétal et interactif explorant différents écosystèmes.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:15,y:45},
+  {id:'sauvetage',name:'Sauvetage Academy',cat:'famille',desc:'Jeu interactif : missions de secours et sauvetage dans un environnement immersif.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:28,y:62},
+  {id:'etincelle',name:"Étincelle : La Malédiction de l'Opale Noire",cat:'famille',desc:'Aventure interactive pour lever une malédiction dans un univers mystérieux.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:18,y:35},
+  {id:'pulse',name:"Pulse ! L'Odyssée électrique",cat:'famille',desc:'Expérience interactive sur l\'électricité et l\'énergie avec manipulations et effets immersifs.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:22,y:28},
+  {id:'antarctica',name:'Antarctica',cat:'famille',desc:'Attraction immersive dans l\'univers polaire et les environnements glacés de l\'Antarctique.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:12,y:62},
+  {id:'maison',name:"La Maison à l'envers",cat:'famille',desc:'Maison entièrement retournée. Expérience visuelle et spatiale déstabilisante.',taille:'~1m minimum',deconseille:'Vertiges',wait:null,status:'open',x:32,y:70},
+  {id:'pesquet',name:'Dans les Yeux de Thomas Pesquet',cat:'famille',desc:'Film immersif sur les missions spatiales de l\'astronaute Thomas Pesquet.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:58,y:20},
+  {id:'chocs',name:'Chocs Cosmiques',cat:'famille',desc:'Expérience immersive sur les phénomènes de l\'univers et les événements cosmiques.',taille:'~1m minimum',deconseille:'—',wait:null,status:'open',x:65,y:15},
+  {id:'gyrotour',name:'La Gyrotour',cat:'famille',desc:'Tour panoramique rotative offrant une vue 360° sur le parc.',taille:'~1m minimum',deconseille:'Vertiges',wait:null,status:'open',x:72,y:10},
+  {id:'kinekid',name:'Kinékid',cat:'enfant',desc:'Cinéma 3D adapté aux enfants avec films immersifs et ludiques.',taille:'Adapté enfants',deconseille:'—',wait:null,status:'open',x:28,y:55},
+];
+
+// Aquascope attractions (shown on submap only)
+let AQUA_ATTR = [
+  {id:'kineau',name:"Kiné'eau",desc:'Cinéma aquatique où eau et images dialoguent.',taille:'~1m minimum',wait:null,status:'open',x:45,y:40},
+  {id:'eauculus',name:"L'Eauculus",desc:'Gouffre étrange et mystérieux avec fonds sous-marins.',taille:'~1m minimum',wait:null,status:'open',x:55,y:55},
+  {id:'crique',name:'La Crique',desc:'Caverne mystérieuse : fusion du numérique et de l\'eau.',taille:'~1m minimum',wait:null,status:'open',x:35,y:50},
+  {id:'riviere',name:'La Rivière',desc:'Bouée portée par les flots dans tous les univers Aquascope.',taille:'~1m minimum',wait:null,status:'open',x:30,y:65},
+  {id:'canyon',name:'Le Canyon',desc:'Faille rocheuse baignée de brume et jeux de lumière.',taille:'~1m minimum',wait:null,status:'open',x:60,y:45},
+  {id:'source',name:'La Source',desc:'Cratère formé par une météorite, rideau d\'eau surprenant.',taille:'~1m minimum',wait:null,status:'open',x:50,y:30},
+  {id:'kraki',name:'Les Tentacules de Kraki',desc:'Toboggans en forme de tentacules. Dès 3 ans.',taille:'Adapté enfants',wait:null,status:'open',x:20,y:70},
+  {id:'grandbain',name:'Le Grand Bain',desc:'Bassin avec jeux aquatiques et seau d\'eau géant.',taille:'Adapté enfants',wait:null,status:'open',x:25,y:55},
+  {id:'ptitbain',name:"Le P'tit Bain",desc:'Bassin peu profond pour les tout-petits.',taille:'Adapté enfants',wait:null,status:'open',x:15,y:65},
+  {id:'labyrinthe',name:'Le Labyrinthe aquatique',desc:'Jets d\'eau et geysers. À franchir.',taille:'Adapté enfants',wait:null,status:'open',x:70,y:60},
+  {id:'grottemus',name:'La Grotte musicale',desc:'Instruments aquatiques dans une cavité rocheuse.',taille:'Adapté enfants',wait:null,status:'open',x:40,y:75},
+];
+
+// Toboggan attractions (aquascope)
+let TOBOGGAN_ATTR = [
+  {id:'flash',name:'Flash (Race Blackhole)',desc:'Course parallèle à toute vitesse.',taille:'1,20m minimum',wait:null,status:'open',x:80,y:20},
+  {id:'sprint',name:'Sprint (Blackhole)',desc:'Toboggan jouant avec la lumière de l\'extérieur.',taille:'1,20m minimum',wait:null,status:'open',x:85,y:30},
+  {id:'quick',name:'Quick (Aquatube 205)',desc:'Quadruple spirale infernale jusqu\'au plongeon final.',taille:'1,40m minimum',wait:null,status:'open',x:80,y:42},
+  {id:'reflex',name:'Reflex (Aquatube 315)',desc:'Descente express vers la plage.',taille:'1,35m minimum',wait:null,status:'open',x:75,y:50},
+  {id:'alien',name:'Alien (Looping Rocket)',desc:'Chute libre au déclenchement d\'une trappe.',taille:'1,40m — 1,95m',wait:null,status:'open',x:85,y:55},
+  {id:'matrix',name:'Matrix (Family Combo)',desc:'Rafting en bouée : descentes, tourbillons et glissades.',taille:'1,40m / 1,20m accompagné',wait:null,status:'open',x:70,y:65},
+  {id:'spiral',name:'Spiral (Mat Racer)',desc:'Course tête en avant sur tapis, deux pistes.',taille:'1,20m minimum',wait:null,status:'open',x:80,y:70},
+  {id:'vaguetob',name:'La Vague (Blackhole 242)',desc:'Descente en bouée avec virages réflexes.',taille:'1,20m / 1,10m accompagné',wait:null,status:'open',x:75,y:75},
+];
+
+let SHOWS = [
+  {id:'clesonges',name:'La Clé des Songes',desc:'Spectacle nocturne mêlant projections, effets aquatiques, lumière et musique.',times:['21:30','22:45'],status:'open'},
+  {id:'eclipse',name:'Éclipse',desc:'Spectacle robotique et visuel. Effets de lumière et mise en scène mécanique.',times:['14:00','16:30','18:00'],status:'open'},
+  {id:'illusio',name:'IllusiO, un destin magique',desc:'Spectacle de magie et d\'illusion. Effets visuels et mise en scène théâtrale.',times:['11:00','13:30','15:30','17:30'],status:'open'},
+];
+
+let NEWS_DATA = [];
+let pinPositions = {};
+ATTRACTIONS.forEach(a=>pinPositions[a.id]={x:a.x,y:a.y});
+AQUA_ATTR.forEach(a=>pinPositions['aqua_'+a.id]={x:a.x,y:a.y});
+TOBOGGAN_ATTR.forEach(a=>pinPositions['tob_'+a.id]={x:a.x,y:a.y});
+
+// Futuropolis submap attractions (placeholder)
+let FUTURO_ATTR = [
+  {id:'f_sauvetage',name:'Sauvetage Academy',x:40,y:35,status:'open'},
+  {id:'f_lapins',name:'Machine à Voyager',x:55,y:50,status:'open'},
+  {id:'f_kinekid',name:'Kinékid',x:30,y:60,status:'open'},
+];
+
+const AFFLUENCE_DATA = {"2026-01-01":"Élevée","2026-01-02":"Élevée","2026-01-03":"À éviter","2026-01-04":"Élevée","2026-01-05":"Modérée","2026-01-06":"Modérée","2026-01-07":"Modérée","2026-01-08":"Modérée","2026-01-09":"Modérée","2026-01-10":"Élevée","2026-01-11":"Élevée","2026-01-12":"Modérée","2026-01-13":"Modérée","2026-01-14":"Modérée","2026-01-15":"Modérée","2026-01-16":"Modérée","2026-01-17":"Élevée","2026-01-18":"Élevée","2026-01-19":"Modérée","2026-01-20":"Modérée","2026-01-21":"Modérée","2026-01-22":"Modérée","2026-01-23":"Modérée","2026-01-24":"Élevée","2026-01-25":"Élevée","2026-01-26":"Modérée","2026-01-27":"Modérée","2026-01-28":"Modérée","2026-01-29":"Modérée","2026-01-30":"Modérée","2026-01-31":"Élevée","2026-02-01":"Modérée","2026-02-02":"Faible","2026-02-03":"Faible","2026-02-04":"Faible","2026-02-05":"Faible","2026-02-06":"Faible","2026-02-07":"Modérée","2026-02-08":"Modérée","2026-02-09":"Faible","2026-02-10":"Faible","2026-02-11":"Faible","2026-02-12":"Faible","2026-02-13":"Faible","2026-02-14":"Modérée","2026-02-15":"Modérée","2026-02-16":"Faible","2026-02-17":"Faible","2026-02-18":"Faible","2026-02-19":"Faible","2026-02-20":"Faible","2026-02-21":"Modérée","2026-02-22":"Modérée","2026-02-23":"Faible","2026-02-24":"Faible","2026-02-25":"Faible","2026-02-26":"Faible","2026-02-27":"Faible","2026-02-28":"Modérée","2026-03-01":"Modérée","2026-03-02":"Faible","2026-03-03":"Faible","2026-03-04":"Faible","2026-03-05":"Faible","2026-03-06":"Faible","2026-03-07":"Modérée","2026-03-08":"Modérée","2026-03-09":"Faible","2026-03-10":"Faible","2026-03-11":"Faible","2026-03-12":"Faible","2026-03-13":"Faible","2026-03-14":"Modérée","2026-03-15":"Modérée","2026-03-16":"Faible","2026-03-17":"Faible","2026-03-18":"Faible","2026-03-19":"Faible","2026-03-20":"Faible","2026-03-21":"Modérée","2026-03-22":"Modérée","2026-03-23":"Faible","2026-03-24":"Faible","2026-03-25":"Faible","2026-03-26":"Faible","2026-03-27":"Faible","2026-03-28":"Modérée","2026-03-29":"Modérée","2026-03-30":"Faible","2026-03-31":"Faible","2026-04-01":"Modérée","2026-04-02":"Modérée","2026-04-03":"Modérée","2026-04-04":"Élevée","2026-04-05":"Élevée","2026-04-06":"Modérée","2026-04-07":"Modérée","2026-04-08":"Modérée","2026-04-09":"Modérée","2026-04-10":"Modérée","2026-04-11":"Élevée","2026-04-12":"Élevée","2026-04-13":"Modérée","2026-04-14":"Modérée","2026-04-15":"Modérée","2026-04-16":"Modérée","2026-04-17":"Modérée","2026-04-18":"Élevée","2026-04-19":"Élevée","2026-04-20":"Modérée","2026-04-21":"Modérée","2026-04-22":"Modérée","2026-04-23":"Modérée","2026-04-24":"Modérée","2026-04-25":"Élevée","2026-04-26":"Élevée","2026-04-27":"Modérée","2026-04-28":"Modérée","2026-04-29":"Modérée","2026-04-30":"Modérée","2026-05-01":"Modérée","2026-05-02":"Élevée","2026-05-03":"Élevée","2026-05-04":"Modérée","2026-05-05":"Modérée","2026-05-06":"Modérée","2026-05-07":"Modérée","2026-05-08":"Modérée","2026-05-09":"Élevée","2026-05-10":"Élevée","2026-05-11":"Modérée","2026-05-12":"Modérée","2026-05-13":"Modérée","2026-05-14":"Modérée","2026-05-15":"Modérée","2026-05-16":"Élevée","2026-05-17":"Élevée","2026-05-18":"Modérée","2026-05-19":"Modérée","2026-05-20":"Modérée","2026-05-21":"Modérée","2026-05-22":"Modérée","2026-05-23":"Élevée","2026-05-24":"Élevée","2026-05-25":"Modérée","2026-05-26":"Modérée","2026-05-27":"Modérée","2026-05-28":"Modérée","2026-05-29":"Modérée","2026-05-30":"Élevée","2026-05-31":"Élevée","2026-06-01":"Modérée","2026-06-02":"Modérée","2026-06-03":"Modérée","2026-06-04":"Modérée","2026-06-05":"Modérée","2026-06-06":"Élevée","2026-06-07":"Élevée","2026-06-08":"Modérée","2026-06-09":"Modérée","2026-06-10":"Modérée","2026-06-11":"Modérée","2026-06-12":"Modérée","2026-06-13":"Élevée","2026-06-14":"Élevée","2026-06-15":"Modérée","2026-06-16":"Modérée","2026-06-17":"Modérée","2026-06-18":"Modérée","2026-06-19":"Modérée","2026-06-20":"Élevée","2026-06-21":"Élevée","2026-06-22":"Modérée","2026-06-23":"Modérée","2026-06-24":"Modérée","2026-06-25":"Modérée","2026-06-26":"Modérée","2026-06-27":"Élevée","2026-06-28":"Élevée","2026-06-29":"Modérée","2026-06-30":"Modérée","2026-07-01":"Élevée","2026-07-02":"Élevée","2026-07-03":"Élevée","2026-07-04":"À éviter","2026-07-05":"À éviter","2026-07-06":"Élevée","2026-07-07":"Élevée","2026-07-08":"Élevée","2026-07-09":"Élevée","2026-07-10":"Élevée","2026-07-11":"À éviter","2026-07-12":"À éviter","2026-07-13":"Élevée","2026-07-14":"Élevée","2026-07-15":"Élevée","2026-07-16":"Élevée","2026-07-17":"Élevée","2026-07-18":"À éviter","2026-07-19":"À éviter","2026-07-20":"Élevée","2026-07-21":"Élevée","2026-07-22":"Élevée","2026-07-23":"Élevée","2026-07-24":"Élevée","2026-07-25":"À éviter","2026-07-26":"À éviter","2026-07-27":"Élevée","2026-07-28":"Élevée","2026-07-29":"Élevée","2026-07-30":"Élevée","2026-07-31":"Élevée","2026-08-01":"À éviter","2026-08-02":"À éviter","2026-08-03":"Élevée","2026-08-04":"Élevée","2026-08-05":"Élevée","2026-08-06":"Élevée","2026-08-07":"Élevée","2026-08-08":"À éviter","2026-08-09":"À éviter","2026-08-10":"Élevée","2026-08-11":"Élevée","2026-08-12":"Élevée","2026-08-13":"Élevée","2026-08-14":"Élevée","2026-08-15":"À éviter","2026-08-16":"À éviter","2026-08-17":"Élevée","2026-08-18":"Élevée","2026-08-19":"Élevée","2026-08-20":"Élevée","2026-08-21":"Élevée","2026-08-22":"À éviter","2026-08-23":"À éviter","2026-08-24":"Élevée","2026-08-25":"Élevée","2026-08-26":"Élevée","2026-08-27":"Élevée","2026-08-28":"Élevée","2026-08-29":"À éviter","2026-08-30":"À éviter","2026-08-31":"Élevée","2026-09-01":"Modérée","2026-09-02":"Modérée","2026-09-03":"Modérée","2026-09-04":"Modérée","2026-09-05":"Élevée","2026-09-06":"Élevée","2026-09-07":"Modérée","2026-09-08":"Modérée","2026-09-09":"Modérée","2026-09-10":"Modérée","2026-09-11":"Modérée","2026-09-12":"Élevée","2026-09-13":"Élevée","2026-09-14":"Modérée","2026-09-15":"Modérée","2026-09-16":"Modérée","2026-09-17":"Modérée","2026-09-18":"Modérée","2026-09-19":"Élevée","2026-09-20":"Élevée","2026-09-21":"Modérée","2026-09-22":"Modérée","2026-09-23":"Modérée","2026-09-24":"Modérée","2026-09-25":"Modérée","2026-09-26":"Élevée","2026-09-27":"Élevée","2026-09-28":"Modérée","2026-09-29":"Modérée","2026-09-30":"Modérée","2026-10-01":"Modérée","2026-10-02":"Modérée","2026-10-03":"Élevée","2026-10-04":"Élevée","2026-10-05":"Modérée","2026-10-06":"Modérée","2026-10-07":"Modérée","2026-10-08":"Modérée","2026-10-09":"Modérée","2026-10-10":"Élevée","2026-10-11":"Élevée","2026-10-12":"Modérée","2026-10-13":"Modérée","2026-10-14":"Modérée","2026-10-15":"Modérée","2026-10-16":"Modérée","2026-10-17":"Élevée","2026-10-18":"Élevée","2026-10-19":"Modérée","2026-10-20":"Modérée","2026-10-21":"Modérée","2026-10-22":"Modérée","2026-10-23":"Modérée","2026-10-24":"Élevée","2026-10-25":"Élevée","2026-10-26":"Modérée","2026-10-27":"Modérée","2026-10-28":"Modérée","2026-10-29":"Modérée","2026-10-30":"Modérée","2026-10-31":"Élevée","2026-11-01":"Modérée","2026-11-02":"Faible","2026-11-03":"Faible","2026-11-04":"Faible","2026-11-05":"Faible","2026-11-06":"Faible","2026-11-07":"Modérée","2026-11-08":"Modérée","2026-11-09":"Faible","2026-11-10":"Faible","2026-11-11":"Faible","2026-11-12":"Faible","2026-11-13":"Faible","2026-11-14":"Modérée","2026-11-15":"Modérée","2026-11-16":"Faible","2026-11-17":"Faible","2026-11-18":"Faible","2026-11-19":"Faible","2026-11-20":"Faible","2026-11-21":"Modérée","2026-11-22":"Modérée","2026-11-23":"Faible","2026-11-24":"Faible","2026-11-25":"Faible","2026-11-26":"Faible","2026-11-27":"Faible","2026-11-28":"Modérée","2026-11-29":"Modérée","2026-11-30":"Faible","2026-12-01":"Modérée","2026-12-02":"Modérée","2026-12-03":"Modérée","2026-12-04":"Modérée","2026-12-05":"Élevée","2026-12-06":"Élevée","2026-12-07":"Modérée","2026-12-08":"Modérée","2026-12-09":"Modérée","2026-12-10":"Modérée","2026-12-11":"Modérée","2026-12-12":"Élevée","2026-12-13":"Élevée","2026-12-14":"Modérée","2026-12-15":"Modérée","2026-12-16":"Modérée","2026-12-17":"Modérée","2026-12-18":"Modérée","2026-12-19":"Élevée","2026-12-20":"À éviter","2026-12-21":"Élevée","2026-12-22":"Élevée","2026-12-23":"Élevée","2026-12-24":"Élevée","2026-12-25":"Élevée","2026-12-26":"À éviter","2026-12-27":"À éviter","2026-12-28":"Élevée","2026-12-29":"Élevée","2026-12-30":"Élevée","2026-12-31":"Élevée"};
+
+// Wartezeiten.app mapping (name -> id)
+const WAIT_MAPPING = {
+  'Destination Mars':'mars',
+  'The Extraordinary Journey':'voyage',
+  'Mission Bermudes':'bermudes',
+  'Tornado Chasers':'tornades',
+  'Dances with Robots':'robots',
+  'Hydro Dynamo':'hydro',
+  "Arthur, the 4D adventure":'arthur',
+  'Dynamic!':'dynamic',
+  'The Time Machine':'lapins',
+  'Upside Down House':'maison',
+  'Rescue Academy':'sauvetage',
+  'Pulse ! The Electric Odyssey':'pulse',
+  'Splash Adventure':'eclabousse',
+  'Aces in the Sky':'pesquet',
+  'Fledgling Firefighters':'sauvetage',
+};
+
+// Auth state
+let currentUser = null;
+const ADMIN_PASS = 'futuroscope2025';
+let users = [{name:'Admin',email:'admin@rideora.fr',role:'admin',pass:ADMIN_PASS}];
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+let currentPage = 'home';
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link,.bn-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const nl=document.getElementById('nl-'+name);
+  const bn=document.getElementById('bn-'+name);
+  if(nl)nl.classList.add('active');
+  if(bn)bn.classList.add('active');
+  currentPage=name;
+  renderPage(name);
+  document.getElementById('parkDropdown').classList.remove('open');
+}
+
+function renderCurrentPage(){renderPage(currentPage);}
+function renderPage(name){
+  if(name==='home')renderHome();
+  else if(name==='waits')renderWaits();
+  else if(name==='freq')renderFreq();
+  else if(name==='news')renderNews();
+  else if(name==='map')renderMap();
+  else if(name==='planner')renderPlanner();
+}
+
+function toggleParkDropdown(){document.getElementById('parkDropdown').classList.toggle('open');}
+function selectPark(p){
+  document.getElementById('parkSelectorLabel').textContent='Futuroscope';
+  document.getElementById('parkDropdown').classList.remove('open');
+  toast('Futuroscope sélectionné');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.park-selector'))document.getElementById('parkDropdown').classList.remove('open');
+});
+
+// ═══════════════════════════════════════════════════════
+//  WEATHER (real)
+// ═══════════════════════════════════════════════════════
+const WX_CODES={0:'☀',1:'🌤',2:'⛅',3:'☁',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'⛈',71:'🌨',73:'🌨',75:'❄',80:'🌦',81:'🌧',82:'⛈',95:'⛈'};
+const WX_DESC_FR={0:'Ciel dégagé',1:'Peu nuageux',2:'Partiellement nuageux',3:'Couvert',45:'Brouillard',51:'Bruine légère',61:'Pluie légère',80:'Averses',95:'Orage'};
+const WX_DESC_EN={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',51:'Drizzle',61:'Light rain',80:'Rain showers',95:'Thunderstorm'};
+const WX_DESC_ES={0:'Despejado',1:'Poco nublado',2:'Parcialmente nublado',3:'Nublado',45:'Niebla',51:'Llovizna',61:'Lluvia ligera',80:'Aguaceros',95:'Tormenta'};
+async function fetchWeather(){
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=46.6734&longitude=0.3690&current_weather=true&timezone=Europe%2FParis');
+    const d=await r.json();
+    const t=Math.round(d.current_weather.temperature);
+    const c=d.current_weather.weathercode;
+    const descs={fr:WX_DESC_FR,en:WX_DESC_EN,es:WX_DESC_ES};
+    document.getElementById('homeWeatherIcon').textContent=WX_CODES[c]||'—';
+    document.getElementById('homeWeatherVal').textContent=t+'°C';
+    document.getElementById('homeWeatherDesc').textContent=(descs[LANG]||WX_DESC_FR)[c]||'Poitiers';
+  }catch(e){
+    document.getElementById('homeWeatherVal').textContent='—°C';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  WAIT TIME API (wartezeiten.app)
+// ═══════════════════════════════════════════════════════
+let waitLastUpdate = null;
+async function fetchWaitTimes(){
+  try{
+    const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://www.wartezeiten.app/ajax/wartezeiten.php?park=futuroscope&language=fr'));
+    const d=await r.json();
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(d.contents,'text/html');
+    const rows=doc.querySelectorAll('tr[data-attraction-name]');
+    rows.forEach(row=>{
+      const name=row.dataset.attractionName;
+      const badge=row.querySelector('.wartezeitenBadge');
+      const wait=badge?parseInt(badge.textContent):null;
+      const id=WAIT_MAPPING[name];
+      if(id){
+        const a=ATTRACTIONS.find(x=>x.id===id);
+        if(a&&!isNaN(wait)){a.wait=wait;a.status='open';}
+      }
+    });
+    waitLastUpdate=new Date();
+    const el=document.getElementById('waitUpdateTime');
+    if(el)el.textContent=waitLastUpdate.getHours().toString().padStart(2,'0')+':'+waitLastUpdate.getMinutes().toString().padStart(2,'0');
+    if(currentPage==='waits')renderWaits();
+    if(currentPage==='home')renderHome();
+  }catch(e){
+    console.warn('Wait time API unavailable, using stored data');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  HOME PAGE
+// ═══════════════════════════════════════════════════════
+function renderHome(){
+  // Schedule
+  const days7=T('days');
+  const now=new Date();
+  const todayDow=(now.getDay()+6)%7;
+  let sh='<thead><tr><th data-i18n="strip_hours">Jour</th><th>Ouverture</th><th>Fermeture</th><th>Statut</th></tr></thead><tbody>';
+  for(let i=0;i<7;i++){
+    const d=new Date(now);d.setDate(d.getDate()+(i-todayDow));
+    const isToday=(i===todayDow);
+    const iswk=(d.getDay()===0||d.getDay()===6);
+    const open=iswk?'09:00':'09:30';
+    const close=iswk?'20:00':'18:30';
+    sh+=`<tr class="${isToday?'today-row':''}"><td style="font-weight:${isToday?700:400};color:${isToday?'var(--accent)':'inherit'}">${days7[i]}${isToday?' ← Aujourd\'hui':''}</td><td>${open}</td><td>${close}</td><td><span class="status-pill sp-open">Ouvert</span></td></tr>`;
+  }
+  sh+='</tbody>';
+  document.getElementById('scheduleTable').innerHTML=sh;
+
+  // Shows
+  document.getElementById('homeShows').innerHTML=SHOWS.map(s=>`
+    <div class="spec-item" onclick="openShowModal('${s.id}')">
+      <div class="spec-icon">◇</div>
+      <div style="flex:1">
+        <div class="spec-name">${s.name}</div>
+        <div class="spec-times">${s.times.map(t=>`<span class="time-chip">${t}</span>`).join('')}</div>
+      </div>
+    </div>`).join('');
+
+  // Stats
+  const open=ATTRACTIONS.filter(a=>a.status==='open').length;
+  const withWait=ATTRACTIONS.filter(a=>a.wait!==null&&a.wait>0&&a.status==='open');
+  const avg=withWait.length?Math.round(withWait.reduce((s,a)=>s+a.wait,0)/withWait.length):null;
+  document.getElementById('homeStats').innerHTML=`
+    <div class="stat-box"><span class="stat-n">${open}</span><span class="stat-l">Attractions ouvertes</span></div>
+    <div class="stat-box"><span class="stat-n">${SHOWS.length}</span><span class="stat-l">Spectacles</span></div>
+    <div class="stat-box"><span class="stat-n">${avg!==null?avg+'min':'—'}</span><span class="stat-l">Attente moyenne</span></div>
+    <div class="stat-box"><span class="stat-n" id="homeTodayCrowd">${getTodayCrowd()}</span><span class="stat-l">Affluence du jour</span></div>`;
+
+  // Crowd strip
+  const tc=getTodayCrowd();
+  document.getElementById('homeCrowdVal').textContent=tc;
+  document.getElementById('homeCrowdDesc').textContent='Prévision Rideora 2026';
+
+  // Practical
+  document.getElementById('homePractical').innerHTML=`
+    <div class="card"><div class="card-title">Parking</div><div class="card-desc">Parking gratuit sur place. Navette gratuite depuis P3. Notez votre emplacement.</div></div>
+    <div class="card"><div class="card-title">Billetterie</div><div class="card-desc">Achat en ligne conseillé. Tarif adulte à partir de 28€. Pass annuel disponible.</div></div>
+    <div class="card"><div class="card-title">Restauration</div><div class="card-desc">Restaurants et points rapides dans le parc. Pique-nique dans les espaces dédiés.</div></div>
+    <div class="card"><div class="card-title">Accessibilité</div><div class="card-desc">Accessible PMR. Fauteuils roulants en prêt à l'accueil. Handi-accueil disponible.</div></div>`;
+}
+
+function getTodayCrowd(){
+  const now=new Date();
+  const key=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  return AFFLUENCE_DATA[key]||'—';
+}
+
+// ═══════════════════════════════════════════════════════
+//  WAITS PAGE
+// ═══════════════════════════════════════════════════════
+function waitClass(a){
+  if(a.status==='maintenance')return 'maint';
+  if(a.status==='closed')return 'closed';
+  if(a.wait===null||a.wait===0)return 'ok';
+  if(a.wait<30)return 'ok';
+  if(a.wait<50)return 'warn';
+  return 'danger';
+}
+function waitText(a){
+  if(a.status==='maintenance')return T('status_maint');
+  if(a.status==='closed')return T('status_closed');
+  if(a.wait===null)return T('no_wait');
+  if(a.wait===0)return T('status_nowait');
+  return a.wait+' '+T('wait_unit');
+}
+const CAT_LABELS={sensation:'Sensation',famille:'Famille',enfant:'Enfant',aqua:'Aquatique',toboggan:'Toboggan'};
+
+function renderWaits(filter='all',search=''){
+  let list=ATTRACTIONS.filter(a=>a.cat!=='aqua'&&a.cat!=='toboggan');
+  if(filter!=='all')list=list.filter(a=>a.cat===filter);
+  if(search)list=list.filter(a=>a.name.toLowerCase().includes(search.toLowerCase()));
+
+  // Sort: open+wait desc first, then maintenance, then closed
+  list.sort((a,b)=>{
+    const rank=x=>x.status==='open'?0:x.status==='maintenance'?1:2;
+    if(rank(a)!==rank(b))return rank(a)-rank(b);
+    return (b.wait||0)-(a.wait||0);
+  });
+
+  document.getElementById('waitList').innerHTML=list.map(a=>{
+    const wc=waitClass(a);
+    const wt=waitText(a);
+    return `<div class="wait-item ${wc}" onclick="openAttrModal('${a.id}')">
+      <div class="wi-name">${a.name}<div class="wi-cat">${CAT_LABELS[a.cat]||a.cat} · ${a.taille||'—'}</div></div>
+      <div class="wi-right">
+        <div class="wi-status ${wc}">${wt}</div>
+        <div class="wi-dot ${wc}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Shows section
+  document.getElementById('showsList').innerHTML=SHOWS.map(s=>`
+    <div class="spec-item" onclick="openShowModal('${s.id}')">
+      <div class="spec-icon">◇</div>
+      <div style="flex:1">
+        <div class="spec-name">${s.name}</div>
+        <div class="spec-times">${s.times.map(t=>`<span class="time-chip">${t}</span>`).join('')}</div>
+      </div>
+      <div class="spec-status"><span class="status-pill sp-${s.status==='open'?'open':'closed'}">${s.status==='open'?T('status_open'):T('status_closed')}</span></div>
+    </div>`).join('');
+
+  // Update time
+  const el=document.getElementById('waitUpdateTime');
+  if(el&&waitLastUpdate){
+    el.textContent=waitLastUpdate.getHours().toString().padStart(2,'0')+':'+waitLastUpdate.getMinutes().toString().padStart(2,'0');
+  }
+}
+
+function filterWaits(f,btn){
+  document.querySelectorAll('#waitFilterBar .fb-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const s=document.getElementById('waitSearch');
+  renderWaits(f,s?s.value:'');
+}
+function searchWaits(v){
+  const active=document.querySelector('#waitFilterBar .fb-btn.active');
+  const cat=active?.textContent.includes('Sensation')?'sensation':active?.textContent.includes('Famille')?'famille':active?.textContent.includes('Enfant')?'enfant':'all';
+  renderWaits(cat,v);
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════════
+function openAttrModal(id){
+  const a=ATTRACTIONS.find(x=>x.id===id)||AQUA_ATTR.find(x=>x.id===id)||TOBOGGAN_ATTR.find(x=>x.id===id);
+  if(!a)return;
+  const wc=waitClass(a);
+  const wt=waitText(a);
+  const wcolor={ok:'var(--low)',warn:'var(--med)',danger:'var(--high)',maint:'var(--muted)',closed:'var(--red)'}[wc];
+  document.getElementById('mainModalBody').innerHTML=`
+    <div class="card-badge cb-${a.cat==='sensation'?'s':a.cat==='aqua'?'a':'f'}" style="margin-bottom:1rem">${CAT_LABELS[a.cat]||a.cat||'—'}</div>
+    <div class="modal-title">${a.name}</div>
+    <div class="modal-desc">${a.desc||'—'}</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-label">${T('lbl_wait')}</div><div class="info-cell-val" style="color:${wcolor}">${wt}</div></div>
+      <div class="info-cell"><div class="info-cell-label">${T('lbl_status')}</div><div class="info-cell-val" style="color:${wcolor}">${a.status==='open'?T('status_open'):a.status==='maintenance'?T('status_maint'):T('status_closed')}</div></div>
+      <div class="info-cell" style="grid-column:1/-1"><div class="info-cell-label">${T('lbl_height')}</div><div class="info-cell-val" style="font-size:0.82rem;font-family:var(--fb);font-weight:500">${a.taille||'—'}</div></div>
+    </div>
+    ${a.deconseille&&a.deconseille!=='—'?`<div><div class="info-cell-label" style="margin-bottom:0.4rem">${T('lbl_contra')}</div><ul class="rest-list">${a.deconseille.split(',').map(d=>`<li>${d.trim()}</li>`).join('')}</ul></div>`:''}`;
+  document.getElementById('mainModal').classList.add('open');
+}
+
+function openShowModal(id){
+  const s=SHOWS.find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('mainModalBody').innerHTML=`
+    <div class="card-badge cb-sp" style="margin-bottom:1rem">Spectacle</div>
+    <div class="modal-title">${s.name}</div>
+    <div class="modal-desc">${s.desc}</div>
+    <div class="info-cell"><div class="info-cell-label">${T('lbl_times')}</div><div class="spec-times" style="margin-top:0.5rem">${s.times.map(t=>`<span class="time-chip">${t}</span>`).join('')}</div></div>`;
+  document.getElementById('mainModal').classList.add('open');
+}
+
+function closeModal(){document.getElementById('mainModal').classList.remove('open');}
+document.getElementById('mainModal').addEventListener('click',e=>{if(e.target===document.getElementById('mainModal'))closeModal();});
+
+
+
+// ═══════════════════════════════════════════════════════
+//  FREQUENTATION
+// ═══════════════════════════════════════════════════════
+function lvlClass(l){
+  if(!l)return'';
+  const m={'Faible':'faible','Modérée':'moderee','Élevée':'elevee','À éviter':'aeviter'};
+  return m[l]||'';
+}
+function lvlLabel(l){
+  if(!l)return'—';
+  if(LANG==='en'){const m={'Faible':'Low','Modérée':'Moderate','Élevée':'High','À éviter':'Avoid'};return m[l]||l;}
+  if(LANG==='es'){const m={'Faible':'Baja','Modérée':'Moderada','Élevée':'Alta','À éviter':'Evitar'};return m[l]||l;}
+  return l;
+}
+
+function renderFreq(){
+  // 7-day forecast
+  const now=new Date();
+  const dnames=T('days');
+  let fw='';
+  for(let i=0;i<7;i++){
+    const d=new Date(now);d.setDate(d.getDate()+i);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const lvl=AFFLUENCE_DATA[key]||'—';
+    const cl=lvlClass(lvl);
+    const dow=(d.getDay()+6)%7;
+    fw+=`<div class="fw-day"><div class="fw-name">${i===0?'Auj.':dnames[dow]}</div><div class="fw-date">${d.getDate()}/${d.getMonth()+1}</div><div class="fw-level ${cl}">${lvlLabel(lvl)}</div></div>`;
+  }
+  document.getElementById('forecastWeek').innerHTML=fw;
+
+  // Annual calendar
+  const today=now.toISOString().slice(0,10);
+  const mnames={fr:['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],en:['January','February','March','April','May','June','July','August','September','October','November','December'],es:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']};
+  const mns=mnames[LANG]||mnames.fr;
+  let calHtml='';
+  for(let m=0;m<12;m++){
+    const firstDay=new Date(2026,m,1);
+    const lastDay=new Date(2026,m+1,0).getDate();
+    const startDow=(firstDay.getDay()+6)%7;
+    let cells='';
+    ['L','M','M','J','V','S','D'].forEach(d=>cells+=`<div class="cal-cell hd">${d}</div>`);
+    for(let i=0;i<startDow;i++)cells+=`<div class="cal-cell empty"></div>`;
+    for(let d=1;d<=lastDay;d++){
+      const key=`2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const lvl=AFFLUENCE_DATA[key]||'';
+      const cl=lvlClass(lvl);
+      const isT=key===today;
+      cells+=`<div class="cal-cell ${cl}${isT?' today':''}" title="${lvlLabel(lvl)||''}">${d}</div>`;
+    }
+    calHtml+=`<div class="cal-month"><div class="cal-month-name">${mns[m]}</div><div class="cal-grid">${cells}</div></div>`;
+  }
+  document.getElementById('annualCal').innerHTML=calHtml;
+}
+
+// ═══════════════════════════════════════════════════════
+//  NEWS
+// ═══════════════════════════════════════════════════════
+function renderNews(filter='all',search=''){
+  let list=NEWS_DATA;
+  if(filter!=='all')list=list.filter(n=>n.cat===filter);
+  if(search)list=list.filter(n=>n.title.toLowerCase().includes(search.toLowerCase()));
+  const el=document.getElementById('newsList');
+  if(!list.length){
+    el.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--muted);font-size:0.85rem">Aucune actualité pour le moment.</div>`;
+    return;
+  }
+  el.innerHTML=list.map(n=>`
+    <div class="news-item" onclick="openNewsModal(${n.id})">
+      <div class="news-emoji">${n.emoji||'—'}</div>
+      <div style="flex:1">
+        <div class="news-cat">${n.cat}</div>
+        <div class="news-title-t">${n.title}</div>
+        <div class="news-excerpt">${(n.excerpt||'').slice(0,120)}${n.excerpt?.length>120?'…':''}</div>
+        <div class="news-meta"><span>${n.date||''}</span>${n.author?`<span>Par ${n.author}</span>`:''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function openNewsModal(id){
+  const n=NEWS_DATA.find(x=>x.id===id);if(!n)return;
+  document.getElementById('mainModalBody').innerHTML=`
+    <div class="news-cat" style="margin-bottom:0.75rem">${n.cat} · ${n.date||''}</div>
+    <div class="modal-title">${n.emoji||''} ${n.title}</div>
+    <div class="modal-desc" style="margin-top:0.75rem">${n.content||n.excerpt||'—'}</div>
+    ${n.author?`<div style="font-size:0.75rem;color:var(--muted);margin-top:0.5rem">Par ${n.author}</div>`:''}`;
+  document.getElementById('mainModal').classList.add('open');
+}
+
+function filterNews(f,btn){
+  document.querySelectorAll('#page-news .fb-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews(f);
+}
+function searchNews(v){renderNews('all',v);}
+
+// ═══════════════════════════════════════════════════════
+//  MAP
+// ═══════════════════════════════════════════════════════
+function renderMap(filter='all'){
+  const el=document.getElementById('mainMapPins');
+  let list=ATTRACTIONS;
+  if(filter!=='all')list=list.filter(a=>a.cat===filter);
+
+  const catColors={sensation:['var(--high)','pin-s'],famille:['#34d399','pin-f'],enfant:['#34d399','pin-f'],spectacle:['var(--accent2)','pin-sp']};
+  let html=list.filter(a=>a.cat!=='aqua'&&a.cat!=='toboggan').map(a=>{
+    const pos=pinPositions[a.id]||{x:a.x||50,y:a.y||50};
+    const [,cls]=catColors[a.cat]||['var(--accent)','pin-f'];
+    return `<div class="map-pin ${cls}" style="left:${pos.x}%;top:${pos.y}%" onclick="openAttrModal('${a.id}')">
+      <div class="pin-label">${a.name}</div>
+      <div class="pin-dot"></div>
+    </div>`;
+  }).join('');
+
+  // Shows pins
+  if(filter==='all'||filter==='spectacle'){
+    const scoords={clesonges:{x:50,y:55},eclipse:{x:45,y:35},illusio:{x:35,y:28}};
+    SHOWS.forEach(s=>{
+      const c=scoords[s.id]||{x:50,y:50};
+      html+=`<div class="map-pin pin-sp" style="left:${c.x}%;top:${c.y}%" onclick="openShowModal('${s.id}')">
+        <div class="pin-label">${s.name}</div>
+        <div class="pin-dot"></div>
+      </div>`;
+    });
+  }
+
+  // Hub pins (Aquascope + Futuropolis) - always shown
+  if(filter==='all'){
+    html+=`<div class="map-pin pin-hub pin-hub-aqua" style="left:48%;top:65%" onclick="openSubmapAqua()">
+      <div class="pin-label">Aquascope</div>
+      <div class="pin-dot" style="display:flex;align-items:center;justify-content:center;font-size:0.45rem;font-weight:800;color:#fff">A</div>
+    </div>`;
+    html+=`<div class="map-pin pin-hub pin-hub-futuro" style="left:28%;top:52%" onclick="openSubmapFuturo()">
+      <div class="pin-label">Futuropolis</div>
+      <div class="pin-dot" style="display:flex;align-items:center;justify-content:center;font-size:0.45rem;font-weight:800;color:#fff">F</div>
+    </div>`;
+  }
+
+  el.innerHTML=html;
+}
+
+function filterPins(f,btn){
+  document.querySelectorAll('#page-map .fb-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMap(f);
+}
+
+// ═══════════════════════════════════════════════════════
+//  PLANNER
+// ═══════════════════════════════════════════════════════
+const PLANNER_QUESTIONS=[
+  {key:'group',q:'plan_q2',opts:['plan_a_alone','plan_a_couple','plan_a_family','plan_a_friends']},
+  {key:'prio',q:'plan_q3',opts:['plan_a_thrill','plan_a_shows','plan_a_aqua','plan_a_relax'],multi:true},
+  {key:'duration',q:'plan_q4',opts:['plan_a_half','plan_a_full','plan_a_2days']},
+  {key:'constraint',q:'plan_q5',opts:['plan_a_none','plan_a_height','plan_a_pmr']},
+];
+let plannerStep=0;
+let plannerAnswers={};
+
+function renderPlanner(){
+  plannerStep=0;plannerAnswers={};
+  showPlannerStep();
+}
+
+function showPlannerStep(){
+  const total=PLANNER_QUESTIONS.length;
+  const pct=Math.round((plannerStep/total)*100);
+  document.getElementById('plannerProgress').style.width=pct+'%';
+
+  if(plannerStep>=total){renderPlannerResult();return;}
+  const q=PLANNER_QUESTIONS[plannerStep];
+  const multi=q.multi||false;
+  let optHtml=q.opts.map(ok=>`
+    <div class="planner-opt" onclick="selectPlannerOpt(this,'${ok}',${multi})" data-val="${ok}">
+      ${T(ok)}
+    </div>`).join('');
+
+  document.getElementById('plannerContent').innerHTML=`
+    <div class="planner-q">
+      <div class="planner-q-text">${T(q.q)}</div>
+      ${multi?`<div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.75rem">Sélection multiple</div>`:''}
+      <div class="planner-opts" id="plannerOpts">${optHtml}</div>
+    </div>
+    <button class="btn-sm btn-primary" onclick="nextPlannerStep()" style="width:100%;padding:0.65rem;font-size:0.85rem">${T('plan_next')}</button>`;
+}
+
+function selectPlannerOpt(el,val,multi){
+  if(!multi){
+    document.querySelectorAll('.planner-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    plannerAnswers[PLANNER_QUESTIONS[plannerStep].key]=val;
+  }else{
+    el.classList.toggle('selected');
+    const k=PLANNER_QUESTIONS[plannerStep].key;
+    let arr=plannerAnswers[k]||[];
+    if(el.classList.contains('selected')){if(!arr.includes(val))arr.push(val);}
+    else{arr=arr.filter(v=>v!==val);}
+    plannerAnswers[k]=arr;
+  }
+}
+
+function nextPlannerStep(){
+  plannerStep++;
+  showPlannerStep();
+}
+
+function renderPlannerResult(){
+  document.getElementById('plannerProgress').style.width='100%';
+  const isFamily=plannerAnswers.group==='plan_a_family';
+  const isThrill=(plannerAnswers.prio||[]).includes('plan_a_thrill');
+  const isAqua=(plannerAnswers.prio||[]).includes('plan_a_aqua');
+  const isShows=(plannerAnswers.prio||[]).includes('plan_a_shows');
+  const isHalf=plannerAnswers.duration==='plan_a_half';
+
+  let steps=[];
+  steps.push({t:'Arrivée au parc',d:'Récupérez votre plan du parc à l\'accueil. Téléchargez l\'application officielle.',time:'09:30'});
+
+  if(isThrill&&!isFamily){
+    steps.push({t:'Destination Mars',d:'Première attraction en arrivant pour éviter les files de milieu de journée.',time:'09:45'});
+    steps.push({t:"L'Extraordinaire Voyage",d:'Enchaînez directement avant la montée en attente.',time:'10:30'});
+  }
+  if(isFamily||plannerAnswers.group==='plan_a_couple'){
+    steps.push({t:'Arthur, l\'aventure 4D',d:'Idéal pour toute la famille, accessible dès 1m05.',time:'10:00'});
+    steps.push({t:'Mission Bermudes',d:'Pour les plus courageux de la famille.',time:'11:00'});
+  }
+  if(isAqua){
+    steps.push({t:'Aquascope — Kiné\'eau',d:'Découvrez l\'espace aquatique. Prévoyez un maillot et une serviette.',time:'14:00'});
+  }
+  if(isShows){
+    steps.push({t:'IllusiO — Spectacle de magie',d:'Plusieurs séances dans la journée. Arrivez 10 minutes avant.',time:'15:30'});
+    steps.push({t:'La Clé des Songes',d:'Spectacle nocturne incontournable. Ne manquez pas la représentation du soir.',time:'21:30'});
+  }
+  if(!isHalf&&!isShows){
+    steps.push({t:'Chasseurs de Tornades',d:'En fin de journée, les temps d\'attente diminuent.',time:'16:30'});
+  }
+  steps.push({t:'Soirée & départ',d:'Retrouvez vos véhicules. Parking ouvert jusqu\'à 30 min après la fermeture.',time:'18:30'});
+
+  const stepsHtml=steps.map((s,i)=>`
+    <div class="planner-step-item">
+      <div class="planner-step-num">${i+1}</div>
+      <div class="planner-step-content">
+        <div class="planner-step-title">${s.t}</div>
+        <div class="planner-step-desc">${s.d}</div>
+        <div class="planner-step-time">${s.time}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('plannerContent').innerHTML=`
+    <div class="planner-result">
+      <div style="font-family:var(--fh);font-size:1rem;font-weight:700;margin-bottom:1.25rem;color:var(--accent)">${T('plan_result_title')}</div>
+      ${stepsHtml}
+    </div>
+    <button class="btn-sm btn-ghost" onclick="renderPlanner()" style="width:100%;padding:0.65rem;font-size:0.82rem;margin-top:1rem">${T('plan_restart')}</button>`;
+
+  if(currentUser){
+    currentUser.lastPlan={steps,answers:plannerAnswers,date:new Date().toLocaleDateString()};
+    toast('Programme sauvegardé dans votre profil');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════
+function showAuthScreen(mode){
+  document.getElementById('authScreen').classList.remove('hidden');
+  if(mode==='login')renderLogin();
+  else renderRegister();
+}
+function closeAuth(){document.getElementById('authScreen').classList.add('hidden');}
+document.getElementById('authScreen').addEventListener('click',e=>{if(e.target===document.getElementById('authScreen'))closeAuth();});
+
+function renderLogin(){
+  document.getElementById('authContent').innerHTML=`
+    <div class="auth-title">Connexion</div>
+    <div class="auth-sub">Accédez à votre profil Rideora</div>
+    <div class="auth-error" id="authError">Identifiants incorrects.</div>
+    <div class="form-group"><label class="form-label">Email / Identifiant</label><input class="form-input" id="loginUser" placeholder="admin ou email" /></div>
+    <div class="form-group"><label class="form-label">Mot de passe</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-sm btn-primary" style="width:100%;padding:0.65rem" onclick="doLogin()">Se connecter</button>
+    <div class="auth-toggle">Pas de compte ? <span onclick="renderRegister()">S'inscrire</span></div>`;
+}
+
+function renderRegister(){
+  document.getElementById('authContent').innerHTML=`
+    <div class="auth-title">Créer un compte</div>
+    <div class="auth-sub">Rejoignez Rideora — Gratuit</div>
+    <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="regName" placeholder="Prénom"/></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="regEmail" placeholder="email@exemple.fr"/></div>
+    <div class="form-group"><label class="form-label">Mot de passe</label><input class="form-input" type="password" id="regPass" placeholder="••••••••"/></div>
+    <button class="btn-sm btn-primary" style="width:100%;padding:0.65rem" onclick="doRegister()">Créer mon compte</button>
+    <div class="auth-toggle">Déjà un compte ? <span onclick="renderLogin()">Se connecter</span></div>`;
+}
+
+function doLogin(){
+  const u=document.getElementById('loginUser')?.value||'';
+  const p=document.getElementById('loginPass')?.value||'';
+  const err=document.getElementById('authError');
+  const user=users.find(x=>(x.name===u||x.email===u)&&x.pass===p);
+  if(!user){err.style.display='block';return;}
+  currentUser=user;
+  closeAuth();
+  document.getElementById('loginBtn').classList.add('hidden');
+  document.getElementById('userAvatarBtn').style.display='block';
+  document.getElementById('userAvatar').textContent=user.name[0].toUpperCase();
+  if(user.role==='admin'){
+    // Add admin nav link
+    document.getElementById('nl-planner').insertAdjacentHTML('afterend','<button class="nav-link" onclick="showPage(\'admin\');adminSection(\'dashboard\')" id="nl-admin">Admin</button>');
+  }
+  toast('Bienvenue '+user.name+' !');
+}
+
+function doRegister(){
+  const name=document.getElementById('regName')?.value||'';
+  const email=document.getElementById('regEmail')?.value||'';
+  const pass=document.getElementById('regPass')?.value||'';
+  if(!name||!email||!pass){toast('Tous les champs sont requis');return;}
+  const u={name,email,pass,role:'visiteur'};
+  users.push(u);currentUser=u;
+  closeAuth();
+  document.getElementById('loginBtn').classList.add('hidden');
+  document.getElementById('userAvatarBtn').style.display='block';
+  document.getElementById('userAvatar').textContent=name[0].toUpperCase();
+  toast('Compte créé ! Bienvenue '+name);
+}
+
+function openAuthOrProfile(){
+  if(!currentUser)return;
+  if(currentUser.role==='admin'){showPage('admin');adminSection('dashboard');}
+  else{
+    // Profile modal
+    document.getElementById('mainModalBody').innerHTML=`
+      <div class="profile-avatar">${currentUser.name[0].toUpperCase()}</div>
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-family:var(--fh);font-size:1.1rem;font-weight:700">${currentUser.name}</div>
+        <div style="font-size:0.8rem;color:var(--muted)">${currentUser.email}</div>
+        <span class="status-pill sp-open" style="display:inline-flex;margin-top:0.4rem">${currentUser.role}</span>
+      </div>
+      ${currentUser.lastPlan?`<div style="background:rgba(45,212,191,0.04);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem"><div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.25rem">Dernier plan — ${currentUser.lastPlan.date}</div><div style="font-size:0.82rem">${currentUser.lastPlan.steps.length} étapes planifiées</div></div>`:''}
+      <button class="btn-sm" style="width:100%;padding:0.6rem;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);color:var(--red);border-radius:8px;cursor:pointer" onclick="logout();closeModal()">Déconnexion</button>`;
+    document.getElementById('mainModal').classList.add('open');
+  }
+}
+
+function logout(){
+  currentUser=null;
+  document.getElementById('loginBtn').classList.remove('hidden');
+  document.getElementById('userAvatarBtn').style.display='none';
+  const el=document.getElementById('nl-admin');if(el)el.remove();
+  if(currentPage==='admin')showPage('home');
+  toast('Déconnecté.');
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN
+// ═══════════════════════════════════════════════════════
+let currentAdminSec='dashboard';
+function adminSection(name){
+  currentAdminSec=name;
+  document.querySelectorAll('.adm-menu-item').forEach(i=>i.classList.remove('active'));
+  const map={dashboard:0,attractions:1,shows:2,news:3,map:4,profile:6,users:7};
+  const items=document.querySelectorAll('.adm-menu-item');
+  if(items[map[name]])items[map[name]].classList.add('active');
+  const el=document.getElementById('adminMain');
+
+  if(name==='dashboard'){
+    el.innerHTML=`<div class="adm-head"><div class="adm-title">Dashboard</div></div>
+    <div class="stat-row">
+      <div class="stat-box"><span class="stat-n">${ATTRACTIONS.filter(a=>a.status==='open').length}</span><span class="stat-l">Ouvertes</span></div>
+      <div class="stat-box"><span class="stat-n">${ATTRACTIONS.filter(a=>a.status==='maintenance').length}</span><span class="stat-l">Maintenance</span></div>
+      <div class="stat-box"><span class="stat-n">${NEWS_DATA.length}</span><span class="stat-l">Actus</span></div>
+      <div class="stat-box"><span class="stat-n">${users.length}</span><span class="stat-l">Utilisateurs</span></div>
+    </div>
+    <div style="font-family:var(--fm);font-size:0.62rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:0.75rem">Attentes les plus élevées</div>
+    <div class="wait-list">${ATTRACTIONS.filter(a=>a.wait>=30&&a.status==='open').sort((a,b)=>b.wait-a.wait).slice(0,5).map(a=>{
+      const wc=waitClass(a);const wt=waitText(a);
+      return `<div class="wait-item ${wc}"><div class="wi-name">${a.name}</div><div class="wi-right"><div class="wi-status ${wc}">${wt}</div><div class="wi-dot ${wc}"></div></div></div>`;
+    }).join('')||'<div style="color:var(--muted);font-size:0.82rem;padding:1rem">Aucune attente élevée</div>'}</div>`;
+  }
+
+  if(name==='attractions'){
+    el.innerHTML=`<div class="adm-head"><div class="adm-title">Attractions</div><button class="btn-sm btn-primary" onclick="admToggleForm('attrForm')">+ Ajouter</button></div>
+    <div class="adm-form-panel" id="attrForm">${buildAttrForm()}<div style="display:flex;gap:0.5rem;margin-top:0.75rem"><button class="btn-sm btn-primary" onclick="admSaveNewAttr()">Sauvegarder</button><button class="btn-sm btn-ghost" onclick="admToggleForm('attrForm')">Annuler</button></div></div>
+    <div id="attrEditForm" class="adm-form-panel"></div>
+    <table class="adm-table"><thead><tr><th>Attraction</th><th>Catégorie</th><th>Attente</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+    ${ATTRACTIONS.map(a=>`<tr>
+      <td style="font-size:0.82rem">${a.name}</td>
+      <td><span style="font-family:var(--fm);font-size:0.65rem;color:var(--muted)">${a.cat}</span></td>
+      <td><span class="wi-status ${waitClass(a)}">${waitText(a)}</span></td>
+      <td><span class="status-pill sp-${a.status==='open'?'open':a.status==='maintenance'?'maint':'closed'}">${a.status==='open'?'Ouvert':a.status==='maintenance'?'Maintenance':'Fermé'}</span></td>
+      <td><div class="action-row">
+        <button class="act-btn" onclick="admEditAttr('${a.id}')">Modifier</button>
+        <button class="act-btn" onclick="admToggleMaint('${a.id}')">${a.status==='maintenance'?'Réouvrir':'Maint.'}</button>
+        <button class="act-btn danger" onclick="admDelAttr('${a.id}')">Sup.</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+  }
+
+  if(name==='shows'){
+    el.innerHTML=`<div class="adm-head"><div class="adm-title">Spectacles</div><button class="btn-sm btn-primary" onclick="admToggleForm('showForm')">+ Ajouter</button></div>
+    <div class="adm-form-panel" id="showForm">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="sName" placeholder="Nom du spectacle"/></div>
+        <div class="form-group"><label class="form-label">Statut</label><select class="form-select" id="sStatus"><option value="open">Ouvert</option><option value="closed">Fermé</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="sDesc"></textarea></div>
+      <div class="form-group"><label class="form-label">Horaires (séparés par des virgules)</label><input class="form-input" id="sTimes" placeholder="11:00, 14:30, 17:00"/></div>
+      <div style="display:flex;gap:0.5rem"><button class="btn-sm btn-primary" onclick="admSaveShow()">Sauvegarder</button><button class="btn-sm btn-ghost" onclick="admToggleForm('showForm')">Annuler</button></div>
+    </div>
+    <div id="showEditForm" class="adm-form-panel"></div>
+    <table class="adm-table"><thead><tr><th>Spectacle</th><th>Horaires</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+    ${SHOWS.map(s=>`<tr>
+      <td style="font-size:0.82rem">${s.name}</td>
+      <td style="font-size:0.75rem;color:var(--muted)">${s.times.join(', ')}</td>
+      <td><span class="status-pill sp-${s.status==='open'?'open':'closed'}">${s.status==='open'?'Ouvert':'Fermé'}</span></td>
+      <td><div class="action-row">
+        <button class="act-btn" onclick="admEditShow('${s.id}')">Modifier</button>
+        <button class="act-btn danger" onclick="admDelShow('${s.id}')">Sup.</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+  }
+
+  if(name==='news'){
+    el.innerHTML=`<div class="adm-head"><div class="adm-title">Actualités</div><button class="btn-sm btn-primary" onclick="admToggleForm('newsForm')">+ Ajouter</button></div>
+    <div class="adm-form-panel" id="newsForm">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Titre</label><input class="form-input" id="nTitle" placeholder="Titre"/></div>
+        <div class="form-group"><label class="form-label">Emoji</label><input class="form-input" id="nEmoji" placeholder="Emoji" style="width:80px"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Catégorie</label><select class="form-select" id="nCat"><option value="ouverture">Ouverture</option><option value="evenement">Événement</option><option value="maintenance">Maintenance</option><option value="info">Info</option></select></div>
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="nDate"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Auteur</label><input class="form-input" id="nAuthor" placeholder="Nom de l'auteur (optionnel)"/></div>
+      <div class="form-group"><label class="form-label">Résumé</label><textarea class="form-textarea" id="nExcerpt" placeholder="Résumé court…"></textarea></div>
+      <div class="form-group"><label class="form-label">Contenu complet</label><textarea class="form-textarea" id="nContent" placeholder="Texte complet…" style="min-height:120px"></textarea></div>
+      <div style="display:flex;gap:0.5rem"><button class="btn-sm btn-primary" onclick="admSaveNews()">Publier</button><button class="btn-sm btn-ghost" onclick="admToggleForm('newsForm')">Annuler</button></div>
+    </div>
+    <div id="newsEditForm" class="adm-form-panel"></div>
+    <table class="adm-table"><thead><tr><th>Titre</th><th>Catégorie</th><th>Date</th><th>Actions</th></tr></thead><tbody>
+    ${NEWS_DATA.map(n=>`<tr>
+      <td style="font-size:0.82rem">${n.emoji||''} ${n.title}</td>
+      <td><span style="font-family:var(--fm);font-size:0.65rem;color:var(--muted)">${n.cat}</span></td>
+      <td style="font-size:0.75rem;color:var(--muted)">${n.date||'—'}</td>
+      <td><div class="action-row">
+        <button class="act-btn" onclick="admEditNews(${n.id})">Modifier</button>
+        <button class="act-btn danger" onclick="admDelNews(${n.id})">Sup.</button>
+      </div></td>
+    </tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1rem">Aucune actualité</td></tr>'}
+    </tbody></table>`;
+  }
+
+  if(name==='map'){
+    el.innerHTML=`<div class="adm-head"><div class="adm-title">Carte — Positions</div><span style="font-size:0.75rem;color:var(--muted)">Sélectionnez une attraction, puis cliquez sur la carte</span></div>
+    <div style="display:grid;grid-template-columns:1fr;gap:1rem">
+      <div style="font-family:var(--fm);font-size:0.62rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:0.5rem">Sélectionner</div>
+      <div class="map-sel-list" id="mapSelList">
+        ${[...ATTRACTIONS,...SHOWS,...FUTURO_ATTR].map(a=>`<div class="map-sel-item" id="msi-${a.id}" onclick="selectMapPin('${a.id}')">${a.name}</div>`).join('')}
+      </div>
+      <div style="font-family:var(--fm);font-size:0.62rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:0.5rem 0" id="mapEdLabel">Aucune sélection</div>
+      <div class="map-editor-wrap" id="mapEditorWrap" onclick="handleMapEditorClick(event)">
+        <img src="1776036265731_image.png" class="map-editor-img" id="mapEdImg" onerror="this.style.minHeight='350px';this.style.background='var(--bg3)';"/>
+        <div id="mapEdPins"></div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--muted)">Cliquez sur la carte pour repositionner l\'attraction sélectionnée. Les positions sont sauvegardées instantanément.</div>
+    </div>`;
+    renderMapEditorPins();
+  }
+
+  if(name==='profile'){
+    const u=currentUser||{};
+    el.innerHTML=`<div class="adm-head"><div class="adm-title">Profil</div></div>
+    <div style="max-width:420px">
+      <div class="profile-avatar" style="width:56px;height:56px;font-size:1.2rem">${u.name?u.name[0].toUpperCase():'?'}</div>
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-family:var(--fh);font-size:1rem;font-weight:700">${u.name||'—'}</div>
+        <div style="font-size:0.78rem;color:var(--muted)">${u.email||'—'}</div>
+      </div>
+      <div class="form-group"><label class="form-label">Nom</label><input class="form-input" value="${u.name||''}" id="profName"/></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="${u.email||''}" id="profEmail"/></div>
+      <div class="form-group"><label class="form-label">Nouveau mot de passe</label><input class="form-input" type="password" placeholder="••••••••" id="profPass"/></div>
+      <button class="btn-sm btn-primary" style="width:100%;padding:0.65rem" onclick="toast('Profil sauvegardé')">Sauvegarder</button>
+    </div>`;
+  }
+
+  if(name==='users'){
+    el.innerHTML=`<div class="adm-head"><div class="adm-title">Utilisateurs</div></div>
+    <table class="adm-table"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Actions</th></tr></thead><tbody>
+    ${users.map(u=>`<tr>
+      <td>${u.name}</td>
+      <td style="font-size:0.78rem;color:var(--muted)">${u.email}</td>
+      <td><span class="status-pill ${u.role==='admin'?'sp-open':'sp-maint'}">${u.role}</span></td>
+      <td><button class="act-btn danger" onclick="toast('Désactivé en démo')">Sup.</button></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+  }
+}
+
+function buildAttrForm(a){
+  return `<div class="form-row">
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="aName" value="${a?.name||''}" placeholder="Nom de l'attraction"/></div>
+    <div class="form-group"><label class="form-label">Catégorie</label><select class="form-select" id="aCat">
+      <option value="sensation" ${a?.cat==='sensation'?'selected':''}>Sensation</option>
+      <option value="famille" ${a?.cat==='famille'?'selected':''}>Famille</option>
+      <option value="enfant" ${a?.cat==='enfant'?'selected':''}>Enfant</option>
+    </select></div>
+  </div>
+  <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="aDesc">${a?.desc||''}</textarea></div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Taille requise</label><input class="form-input" id="aTaille" value="${a?.taille||''}" placeholder="1,10m minimum"/></div>
+    <div class="form-group"><label class="form-label">Déconseillé à</label><input class="form-input" id="aDec" value="${a?.deconseille||''}" placeholder="Femmes enceintes, …"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Attente (min)</label><input class="form-input" type="number" id="aWait" value="${a?.wait||0}"/></div>
+    <div class="form-group"><label class="form-label">Statut</label><select class="form-select" id="aStatus">
+      <option value="open" ${a?.status==='open'?'selected':''}>Ouvert</option>
+      <option value="maintenance" ${a?.status==='maintenance'?'selected':''}>Maintenance</option>
+      <option value="closed" ${a?.status==='closed'?'selected':''}>Fermé</option>
+    </select></div>
+  </div>`;
+}
+
+function admToggleForm(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+
+function admSaveNewAttr(){
+  const name=document.getElementById('aName')?.value||'';
+  if(!name){toast('Nom requis');return;}
+  const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z_]/g,'');
+  const a={id,name,cat:document.getElementById('aCat')?.value||'famille',
+    desc:document.getElementById('aDesc')?.value||'',
+    taille:document.getElementById('aTaille')?.value||'—',
+    deconseille:document.getElementById('aDec')?.value||'—',
+    wait:parseInt(document.getElementById('aWait')?.value)||null,
+    status:document.getElementById('aStatus')?.value||'open',x:50,y:50};
+  ATTRACTIONS.push(a);pinPositions[id]={x:50,y:50};
+  toast(name+' ajouté');adminSection('attractions');
+}
+
+function admEditAttr(id){
+  const a=ATTRACTIONS.find(x=>x.id===id);if(!a)return;
+  const ef=document.getElementById('attrEditForm');
+  ef.classList.add('open');
+  ef.innerHTML=`<div style="font-family:var(--fh);font-size:0.78rem;font-weight:700;color:var(--accent);margin-bottom:0.75rem">Modifier : ${a.name}</div>
+  ${buildAttrForm(a).replace('id="aName"','id="eaName"').replace('id="aCat"','id="eaCat"').replace('id="aDesc"','id="eaDesc"').replace('id="aTaille"','id="eaTaille"').replace('id="aDec"','id="eaDec"').replace('id="aWait"','id="eaWait"').replace('id="aStatus"','id="eaStatus"')}
+  <div style="display:flex;gap:0.5rem;margin-top:0.75rem"><button class="btn-sm btn-primary" onclick="admApplyEdit('${id}')">Sauvegarder</button><button class="btn-sm btn-ghost" onclick="document.getElementById('attrEditForm').classList.remove('open')">Annuler</button></div>`;
+}
+
+function admApplyEdit(id){
+  const a=ATTRACTIONS.find(x=>x.id===id);if(!a)return;
+  a.name=document.getElementById('eaName')?.value||a.name;
+  a.cat=document.getElementById('eaCat')?.value||a.cat;
+  a.desc=document.getElementById('eaDesc')?.value||a.desc;
+  a.taille=document.getElementById('eaTaille')?.value||a.taille;
+  a.deconseille=document.getElementById('eaDec')?.value||a.deconseille;
+  a.wait=parseInt(document.getElementById('eaWait')?.value)||null;
+  a.status=document.getElementById('eaStatus')?.value||a.status;
+  toast(a.name+' mis à jour');adminSection('attractions');
+}
+
+function admToggleMaint(id){
+  const a=ATTRACTIONS.find(x=>x.id===id);if(!a)return;
+  a.status=a.status==='maintenance'?'open':'maintenance';
+  toast(a.name+' : '+(a.status==='maintenance'?'Maintenance':'Réouverture'));adminSection('attractions');
+}
+
+function admDelAttr(id){
+  if(!confirm('Supprimer cette attraction ?'))return;
+  ATTRACTIONS=ATTRACTIONS.filter(a=>a.id!==id);
+  toast('Supprimé');adminSection('attractions');
+}
+
+function admSaveShow(){
+  const name=document.getElementById('sName')?.value||'';if(!name){toast('Nom requis');return;}
+  const id='show_'+Date.now();
+  SHOWS.push({id,name,desc:document.getElementById('sDesc')?.value||'',
+    times:(document.getElementById('sTimes')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    status:document.getElementById('sStatus')?.value||'open'});
+  toast(name+' ajouté');adminSection('shows');
+}
+
+function admEditShow(id){
+  const s=SHOWS.find(x=>x.id===id);if(!s)return;
+  const ef=document.getElementById('showEditForm');ef.classList.add('open');
+  ef.innerHTML=`<div style="font-family:var(--fh);font-size:0.78rem;font-weight:700;color:var(--accent);margin-bottom:0.75rem">Modifier : ${s.name}</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="esName" value="${s.name}"/></div>
+    <div class="form-group"><label class="form-label">Statut</label><select class="form-select" id="esStatus"><option value="open" ${s.status==='open'?'selected':''}>Ouvert</option><option value="closed" ${s.status==='closed'?'selected':''}>Fermé</option></select></div>
+  </div>
+  <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="esDesc">${s.desc||''}</textarea></div>
+  <div class="form-group"><label class="form-label">Horaires (virgules)</label><input class="form-input" id="esTimes" value="${s.times.join(', ')}"/></div>
+  <div style="display:flex;gap:0.5rem"><button class="btn-sm btn-primary" onclick="admApplyShow('${id}')">Sauvegarder</button><button class="btn-sm btn-ghost" onclick="document.getElementById('showEditForm').classList.remove('open')">Annuler</button></div>`;
+}
+
+function admApplyShow(id){
+  const s=SHOWS.find(x=>x.id===id);if(!s)return;
+  s.name=document.getElementById('esName')?.value||s.name;
+  s.status=document.getElementById('esStatus')?.value||s.status;
+  s.desc=document.getElementById('esDesc')?.value||s.desc;
+  s.times=(document.getElementById('esTimes')?.value||'').split(',').map(t=>t.trim()).filter(Boolean);
+  toast(s.name+' mis à jour');adminSection('shows');
+}
+
+function admDelShow(id){
+  if(!confirm('Supprimer ce spectacle ?'))return;
+  SHOWS=SHOWS.filter(s=>s.id!==id);toast('Supprimé');adminSection('shows');
+}
+
+function admSaveNews(){
+  const title=document.getElementById('nTitle')?.value||'';if(!title){toast('Titre requis');return;}
+  const id=Date.now();
+  const dateVal=document.getElementById('nDate')?.value;
+  const dateStr=dateVal?new Date(dateVal).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):new Date().toLocaleDateString('fr-FR');
+  NEWS_DATA.unshift({id,cat:document.getElementById('nCat')?.value||'info',title,
+    emoji:document.getElementById('nEmoji')?.value||'',
+    date:dateStr,
+    author:document.getElementById('nAuthor')?.value||'',
+    excerpt:document.getElementById('nExcerpt')?.value||'',
+    content:document.getElementById('nContent')?.value||''});
+  toast('Publié');adminSection('news');
+}
+
+function admEditNews(id){
+  const n=NEWS_DATA.find(x=>x.id===id);if(!n)return;
+  const ef=document.getElementById('newsEditForm');ef.classList.add('open');
+  ef.innerHTML=`<div style="font-family:var(--fh);font-size:0.78rem;font-weight:700;color:var(--accent);margin-bottom:0.75rem">Modifier</div>
+  <div class="form-group"><label class="form-label">Titre</label><input class="form-input" id="enTitle" value="${n.title}"/></div>
+  <div class="form-group"><label class="form-label">Résumé</label><textarea class="form-textarea" id="enExcerpt">${n.excerpt||''}</textarea></div>
+  <div class="form-group"><label class="form-label">Contenu</label><textarea class="form-textarea" id="enContent" style="min-height:100px">${n.content||''}</textarea></div>
+  <div style="display:flex;gap:0.5rem"><button class="btn-sm btn-primary" onclick="admApplyNews(${id})">Sauvegarder</button><button class="btn-sm btn-ghost" onclick="document.getElementById('newsEditForm').classList.remove('open')">Annuler</button></div>`;
+}
+
+function admApplyNews(id){
+  const n=NEWS_DATA.find(x=>x.id===id);if(!n)return;
+  n.title=document.getElementById('enTitle')?.value||n.title;
+  n.excerpt=document.getElementById('enExcerpt')?.value||n.excerpt;
+  n.content=document.getElementById('enContent')?.value||n.content;
+  toast('Mis à jour');adminSection('news');
+}
+
+function admDelNews(id){
+  if(!confirm('Supprimer ?'))return;
+  NEWS_DATA=NEWS_DATA.filter(n=>n.id!==id);toast('Supprimé');adminSection('news');
+}
+
+// Map editor
+let selectedMapPin=null;
+function selectMapPin(id){
+  selectedMapPin=id;
+  document.querySelectorAll('.map-sel-item').forEach(e=>e.classList.remove('active'));
+  const el=document.getElementById('msi-'+id);if(el)el.classList.add('active');
+  const a=[...ATTRACTIONS,...AQUA_ATTR,...TOBOGGAN_ATTR,...SHOWS,...FUTURO_ATTR].find(x=>x.id===id);
+  const lbl=document.getElementById('mapEdLabel');
+  if(lbl&&a)lbl.textContent='Repositionner : '+a.name;
+}
+
+function handleMapEditorClick(e){
+  if(!selectedMapPin){toast('Sélectionnez une attraction');return;}
+  const wrap=document.getElementById('mapEditorWrap');
+  const rect=wrap.getBoundingClientRect();
+  const x=((e.clientX-rect.left)/rect.width*100).toFixed(1);
+  const y=((e.clientY-rect.top)/rect.height*100).toFixed(1);
+  pinPositions[selectedMapPin]={x:parseFloat(x),y:parseFloat(y)};
+  // Also update the attraction's own position
+  const a=[...ATTRACTIONS,...AQUA_ATTR,...TOBOGGAN_ATTR].find(x=>x.id===selectedMapPin);
+  if(a){a.x=parseFloat(x);a.y=parseFloat(y);}
+  renderMapEditorPins();
+  toast('Position sauvegardée');
+}
+
+function renderMapEditorPins(){
+  const el=document.getElementById('mapEdPins');if(!el)return;
+  const catCol={sensation:'var(--high)',famille:'#34d399',enfant:'#34d399',aqua:'#38bdf8',toboggan:'var(--accent)',spectacle:'var(--accent2)'};
+  const all=[...ATTRACTIONS.map(a=>({...a,prefix:''})),...AQUA_ATTR.map(a=>({...a,cat:'aqua',prefix:'aqua_'})),...TOBOGGAN_ATTR.map(a=>({...a,cat:'toboggan',prefix:'tob_'}))];
+  el.innerHTML=all.map(a=>{
+    const pid=a.prefix?a.prefix+a.id:a.id;
+    const pos=pinPositions[pid]||{x:a.x||50,y:a.y||50};
+    const col=catCol[a.cat]||'var(--accent)';
+    const isSelected=selectedMapPin===pid;
+    return `<div class="ed-pin${isSelected?' ed-pin-selected':''}" style="left:${pos.x}%;top:${pos.y}%;background:${col}" onclick="event.stopPropagation();selectMapPin('${pid}')">
+      <div class="ed-label">${a.name.slice(0,15)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg){
+  const el=document.getElementById('toastEl');
+  el.textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+fetchWeather();
+renderHome();
+fetchWaitTimes();
+setInterval(fetchWaitTimes,120000); // refresh every 2min
+setInterval(()=>{if(currentPage==='home')renderHome();},60000);
+</script>
+</body>
+</html>
