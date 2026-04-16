@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+  const supabaseUrl = "https://oabyjjqxifixdwawnjqh.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hYnlqanF4aWZpeGR3YXduanFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNTk3NDAsImV4cCI6MjA5MTkzNTc0MH0.4TM-PYlL8e98303A9zxu8e5CGFBFqTYRpB8LTrLz2H8";
+
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Rideora — Skip the lines. Enjoy every ride.</title>
